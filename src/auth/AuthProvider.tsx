@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           onLoad: 'check-sso',
           pkceMethod: 'S256',
           silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+
         });
         setIsAuthenticated(authenticated);
         if (authenticated) {
@@ -74,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');

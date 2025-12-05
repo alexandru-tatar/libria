@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { HomePage } from '../pages/HomePage';
 
 const LoginPage = lazy(() => import('../pages/login'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
@@ -14,11 +15,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: (
-          <Suspense fallback={null}>
-            <LoginPage />
-          </Suspense>
-        ),
+        element: <HomePage />,
       },
       {
         path: '/login',
@@ -38,7 +35,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
         children: [
-          // child routing .. 
+          // child routing ..
         ],
       },
     ],
