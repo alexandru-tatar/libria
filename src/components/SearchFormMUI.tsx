@@ -28,10 +28,10 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Relative default lets the dev proxy handle self-signed HTTPS backends
+  const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
 
   const handleSearch = async () => {
-    const baseUrl = 'https://localhost:3000/rest';
-
     setLoading(true);
     setError(null);
 
@@ -96,7 +96,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = () => {
         params.titel = s;
       }
 
-      const { data } = await axios.get('https://localhost:3000/rest', { params });
+      const { data } = await axios.get(baseUrl, { params });
 
       const booksArray = data._embedded?.buecher || data.content || data;
       setBooks(Array.isArray(booksArray) ? booksArray : []);
