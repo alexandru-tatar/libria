@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 
+const HomePage = lazy(() => import('../pages/landing/Home'));
 const LoginPage = lazy(() => import('../pages/login'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
 
@@ -16,7 +17,7 @@ const router = createBrowserRouter([
         path: '/',
         element: (
           <Suspense fallback={null}>
-            <LoginPage />
+            <HomePage />
           </Suspense>
         ),
       },
