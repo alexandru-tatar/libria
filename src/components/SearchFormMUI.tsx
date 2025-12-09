@@ -6,6 +6,7 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
+  Pagination,
   Stack,
   TextField,
   Typography,
@@ -28,40 +29,53 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  // Relative default lets the dev proxy handle self-signed HTTPS backends
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 5;
   const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
+  
+  const buildParams = (value: string) => {
+    const params: Record<string, string> = {};
+    const valueLower = value.toLowerCase();
 
-  const handleSearch = async () => {
+    if (/^\d{3}-\d/.test(value)) {
+      params.isbn = value;
+    } else if (['epub', 'hardcover', 'paperback'].includes(valueLower)) {
+      params.art = valueLower.toUpperCase();
+    } else if (['javascript', 'typescript', 'java', 'python'].includes(valueLower)) {
+      params[valueLower] = 'true';
+    } else if (value) {
+      params.titel = value;
+    }
+
+    return params;
+  };
+
+  const fetchBooks = async (value: string, targetPage = 1) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Suchparameter: ISBN, Buchart, Schlagwort oder Titel
-      const params: Record<string, string> = {};
-      const queryLower = query.toLowerCase();
+      const params = buildParams(value);
+      const { data } = await axios.get(baseUrl, {
+        params: { ...params, page: targetPage, size: pageSize },
+      });
 
-      // ISBN-Suche (Format: 978-..., nur Zahlen mit Bindestrichen)
-      if (/^\d{3}-\d/.test(query)) {
-        params.isbn = query;
-      }
-      // Buchart-Suche
-      else if (['epub', 'hardcover', 'paperback'].includes(queryLower)) {
-        params.art = queryLower.toUpperCase();
-      }
-      // Bekannte Schlagwörter als eigene Parameter
-      else if (['javascript', 'typescript', 'java', 'python'].includes(queryLower)) {
-        params[queryLower] = 'true';
-      } else if (query) {
-        // Sonst als Titel-Suche
-        params.titel = query;
-      }
-
-      const { data } = await axios.get(baseUrl, { params });
-
-      // Backend kann HAL-Format oder direktes Array zurückgeben
       const booksArray = data._embedded?.buecher || data.content || data;
+      const rawBooks = Array.isArray(booksArray) ? booksArray : [];
+      const totalElementsFromResponse = data.page?.totalElements ?? data.totalElements;
+      const totalPagesFromResponse = data.page?.totalPages ?? data.totalPages;
+      const backendPageNumber = data.page?.number;
+      const totalElements = totalElementsFromResponse ?? rawBooks.length;
+      const pages = totalPagesFromResponse ?? Math.max(1, Math.ceil(totalElements / pageSize) || 1);
+      const start = (targetPage - 1) * pageSize;
+      const booksPage = totalPagesFromResponse ? rawBooks : rawBooks.slice(start, start + pageSize);
+      const resolvedPage =
+        backendPageNumber === undefined ? targetPage : backendPageNumber >= 0 ? backendPageNumber + 1 : targetPage;
 
-      setBooks(Array.isArray(booksArray) ? booksArray : []);
+      setBooks(booksPage);
+      setTotalPages(pages);
+      setPage(Math.min(resolvedPage, pages));
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(`HTTP Error: ${err.response?.status || err.message}`);
@@ -72,47 +86,17 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = async () => {
+    await fetchBooks(query, 1);
   };
 
   const handleSuggestionClick = async (s: string) => {
     setQuery(s);
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Suchparameter: Buchart, Schlagwort oder Titel
-      const params: Record<string, string> = {};
-      const sLower = s.toLowerCase();
-
-      // Buchart als art-Parameter
-      if (['epub', 'hardcover', 'paperback'].includes(sLower)) {
-        params.art = sLower.toUpperCase();
-      }
-      // Schlagwörter
-      else if (['javascript', 'typescript', 'java', 'python'].includes(sLower)) {
-        params[sLower] = 'true';
-      } else {
-        params.titel = s;
-      }
-
-      const { data } = await axios.get(baseUrl, { params });
-
-      const booksArray = data._embedded?.buecher || data.content || data;
-      setBooks(Array.isArray(booksArray) ? booksArray : []);
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(`HTTP Error: ${err.response?.status || err.message}`);
-      } else {
-        setError(err instanceof Error ? err.message : 'Fehler beim Laden der Bücher');
-      }
-      setBooks([]);
-    } finally {
-      setLoading(false);
-    }
+    await fetchBooks(s, 1);
   };
 
-  // Simple suggestions
   const updateSuggestions = (q: string) => {
     if (!q) {
       setSuggestions([]);
@@ -178,11 +162,22 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = () => {
       )}
 
       {!loading && !error && books.length > 0 && (
-        <div className="book-results-grid">
-          {books.map((book) => (
-            <BookMediaMUI key={book.isbn} book={book} />
-          ))}
-        </div>
+        <Stack spacing={3} sx={{ alignItems: 'center', mt: 2 }}>
+          <div className="book-results-grid">
+            {books.map((book) => (
+              <BookMediaMUI key={book.isbn} book={book} />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <Pagination
+              count={totalPages}
+              page={page}
+              color="primary"
+              onChange={(_, value) => fetchBooks(query, value)}
+              disabled={loading}
+            />
+          )}
+        </Stack>
       )}
 
       {!loading && !error && books.length === 0 && query && (
