@@ -1,17 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { AuthContext } from './authContext';
+import type { AuthState } from './types';
 import { keycloak } from './keycloak';
 
-type AuthState = {
-  isAuthenticated: boolean;
-  token?: string;
-  profile?: Keycloak.KeycloakProfile;
-  login: (redirectTo?: string) => void;
-  logout: () => void;
-  loading: boolean;
-};
-
-const AuthContext = createContext<AuthState | undefined>(undefined);
 const REFRESH_INTERVAL_MS = 25_000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -19,6 +11,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState<string | undefined>();
   const [profile, setProfile] = useState<Keycloak.KeycloakProfile | undefined>();
+  const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -29,17 +22,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           onLoad: 'check-sso',
           pkceMethod: 'S256',
           silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-
         });
+
         setIsAuthenticated(authenticated);
         if (authenticated) {
           setToken(keycloak.token);
           setProfile(await keycloak.loadUserProfile());
+          const realmRoles = keycloak.realmAccess?.roles ?? [];
+          setRoles(realmRoles);
+
           interval = window.setInterval(async () => {
             const ok = await keycloak.updateToken(30).catch(() => false);
             if (ok && keycloak.token) setToken(keycloak.token);
           }, REFRESH_INTERVAL_MS);
         }
+      } catch (err) {
+        console.error('AuthProvider.bootstrap error', err);
       } finally {
         setLoading(false);
       }
@@ -53,31 +51,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({
-      isAuthenticated,
-      token,
-      profile,
-      loading,
-      login: (redirectTo) =>
-        keycloak.login({
-          redirectUri: redirectTo
-            ? `${window.location.origin}${redirectTo}`
-            : window.location.href,
-        }),
-      logout: () =>
-        keycloak.logout({
-          redirectUri: window.location.origin,
-        }),
-    }),
-    [isAuthenticated, token, profile, loading],
+    () => {
+      const isAdmin = roles.includes('admin');
+      return {
+        isAuthenticated,
+        token,
+        profile,
+        roles,
+        isAdmin,
+        loading,
+        login: (redirectTo) => {
+          const fullRedirect = redirectTo ? `${window.location.origin}${redirectTo}` : window.location.href;
+          return keycloak
+            .login({ redirectUri: fullRedirect })
+            .catch((err) => console.error('AuthProvider.login error', err));
+        },
+        logout: () =>
+          keycloak.logout({
+            redirectUri: window.location.origin,
+          }),
+      };
+    },
+    [isAuthenticated, token, profile, roles, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuthContext() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');
-  return ctx;
 }

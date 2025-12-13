@@ -6,6 +6,7 @@ import { HomePage } from '../pages/HomePage';
 
 const LoginPage = lazy(() => import('../pages/login'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
+const ProfilePage = lazy(() => import('../pages/profile'));
 
 
 const router = createBrowserRouter([
@@ -37,6 +38,16 @@ const router = createBrowserRouter([
         children: [
           // child routing ..
         ],
+      },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={null}>
+              <ProfilePage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
       },
     ],
   },
