@@ -7,6 +7,7 @@ import { HomePage } from '../pages/HomePage';
 const LoginPage = lazy(() => import('../pages/login'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
 const ProfilePage = lazy(() => import('../pages/profile'));
+const AdminPage = lazy(() => import('../pages/admin'));
 
 
 const router = createBrowserRouter([
@@ -45,6 +46,16 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <Suspense fallback={null}>
               <ProfilePage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/admin',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={null}>
+              <AdminPage />
             </Suspense>
           </ProtectedRoute>
         ),

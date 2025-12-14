@@ -36,6 +36,14 @@ export function AppShell() {
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
+                    navigate('/admin');
+                  }}
+                >
+                  Admin Panel
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
                     logout();
                   }}
                 >

@@ -29,7 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(keycloak.token);
           setProfile(await keycloak.loadUserProfile());
           const realmRoles = keycloak.realmAccess?.roles ?? [];
-          setRoles(realmRoles);
+          const clientRoles = keycloak.resourceAccess?.['nest-client']?.roles ?? [];
+          const allRoles = [...realmRoles, ...clientRoles];
+          setRoles(allRoles);
 
           interval = window.setInterval(async () => {
             const ok = await keycloak.updateToken(30).catch(() => false);
