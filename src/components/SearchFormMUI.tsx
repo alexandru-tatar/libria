@@ -34,8 +34,6 @@ type Filters = {
   preisBis: string;
   rabattAb: string;
   ratingMin: number;
-  datumVon: string;
-  datumBis: string;
   schlagwoerter: string[];
   sort: string;
 };
@@ -124,8 +122,6 @@ const defaultFilters: Filters = {
   preisBis: '',
   rabattAb: '',
   ratingMin: 0,
-  datumVon: '',
-  datumBis: '',
   schlagwoerter: [],
   sort: 'titel,asc',
 };
@@ -152,8 +148,6 @@ export const BookSearchFormMUI: React.FC = () => {
     if (filters.titel) p.titel = filters.titel;
     if (filters.art) p.art = filters.art;
     if (filters.lieferbar) p.lieferbar = true;
-    if (filters.datumVon) p.datumVon = filters.datumVon;
-    if (filters.datumBis) p.datumBis = filters.datumBis;
     if (filters.schlagwoerter.length) p.schlagwoerter = filters.schlagwoerter.join(',');
     return p;
   }, [filters, pageSize]);
