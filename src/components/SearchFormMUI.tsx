@@ -7,6 +7,7 @@ import {
   FormControl,
   FormControlLabel,
   Grid,
+  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -21,7 +22,6 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import axios from 'axios';
-
 import type { BuchDTO } from '../types/book';
 import { BookMediaMUI } from './MediaMUI';
 import './SearchForm.css';
@@ -58,11 +58,7 @@ const defaultFilters: Filters = {
 
 const quickTags = ['JavaScript', 'TypeScript', 'Java', 'Python', 'Bestseller', 'Neu'];
 
-interface BookSearchFormMUIProps {
-  onSelect?: (book: BuchDTO) => void;
-}
-
-export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }) => {
+export const BookSearchFormMUI: React.FC = () => {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [books, setBooks] = useState<BuchDTO[]>([]);
   const [loading, setLoading] = useState(false);
@@ -143,7 +139,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             label="Titel / Untertitel"
             value={filters.titel}
@@ -161,7 +157,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="ISBN"
             value={filters.isbn}
@@ -172,7 +168,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             fullWidth
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>Buchart</InputLabel>
             <Select
@@ -191,7 +187,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="Preis von"
             type="number"
@@ -203,7 +199,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             fullWidth
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="Preis bis"
             type="number"
@@ -215,7 +211,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             fullWidth
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="Rabatt ab"
             type="number"
@@ -229,7 +225,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             helperText="0–1 (z.B. 0.2 = 20%)"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="Erscheinung ab"
             type="date"
@@ -242,7 +238,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             label="Erscheinung bis"
             type="date"
@@ -256,7 +252,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
             Bewertung ab: {filters.ratingMin} ★
           </Typography>
@@ -273,7 +269,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
           />
         </Grid>
 
-        <Grid item xs={12} md={3} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center' }}>
           <FormControlLabel
             control={
               <Switch
@@ -288,7 +284,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
           />
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>Sortierung</InputLabel>
             <Select
@@ -352,13 +348,7 @@ export const BookSearchFormMUI: React.FC<BookSearchFormMUIProps> = ({ onSelect }
         <Stack spacing={3} sx={{ alignItems: 'center', mt: 2 }}>
           <div className="book-results-grid">
             {books.map((book) => (
-              <Box
-                key={book.isbn}
-                onClick={() => onSelect?.(book)}
-                sx={{ cursor: onSelect ? 'pointer' : 'default' }}
-              >
-                <BookMediaMUI book={book} />
-              </Box>
+              <BookMediaMUI key={book.isbn} book={book} />
             ))}
           </div>
           {totalPages > 1 && (
