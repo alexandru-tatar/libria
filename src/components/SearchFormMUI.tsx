@@ -7,7 +7,6 @@ import {
   FormControl,
   FormControlLabel,
   Grid,
-  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -41,6 +40,81 @@ type Filters = {
   sort: string;
 };
 
+const sortBooksClient = (items: BuchDTO[], sort: string) => {
+  if (!sort) return items;
+
+  const [field, dir] = sort.split(',');
+  const direction = dir === 'desc' ? -1 : 1;
+
+  const getComparableValue = (book: BuchDTO) => {
+    switch (field) {
+      case 'preis':
+        return book.preis ?? 0;
+      case 'datum':
+        return book.datum ? new Date(book.datum).getTime() : 0;
+      case 'rating':
+        return book.rating ?? 0;
+      default:
+        return book.titel?.titel ?? '';
+    }
+  };
+
+  return [...items].sort((a, b) => {
+    const aVal = getComparableValue(a);
+    const bVal = getComparableValue(b);
+
+    if (typeof aVal === 'string' || typeof bVal === 'string') {
+      return aVal.toString().localeCompare(bVal.toString(), 'de', { sensitivity: 'base' }) * direction;
+    }
+
+    if (aVal === bVal) return 0;
+    return aVal > bVal ? direction : -direction;
+  });
+};
+
+const filterBooksClient = (items: BuchDTO[], filters: Filters) => {
+  const selectedTags = filters.schlagwoerter.map((s) => s.toLowerCase());
+  const minPrice = filters.preisVon ? Number(filters.preisVon) : undefined;
+  const maxPrice = filters.preisBis ? Number(filters.preisBis) : undefined;
+  const minDiscount = filters.rabattAb ? Number(filters.rabattAb) : undefined;
+  const minRating = filters.ratingMin ? Number(filters.ratingMin) : undefined;
+  const isbnSearch = filters.isbn.trim();
+  const normalizeIsbn = (value: string) => value.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+  const isbnNeedle = isbnSearch ? normalizeIsbn(isbnSearch) : '';
+
+  return items.filter((book) => {
+    if (isbnNeedle) {
+      const candidate = normalizeIsbn(book.isbn ?? '');
+      if (!candidate.includes(isbnNeedle)) return false;
+    }
+
+    if (selectedTags.length) {
+      if (!book.schlagwoerter?.length) return false;
+      const bookTags = book.schlagwoerter.map((s) => s.toLowerCase());
+      if (!selectedTags.every((tag) => bookTags.includes(tag))) return false;
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const price = Number(book.preis);
+      if (Number.isNaN(price)) return false;
+      if (minPrice !== undefined && price < minPrice) return false;
+      if (maxPrice !== undefined && price > maxPrice) return false;
+    }
+
+    if (minDiscount !== undefined) {
+      const discount = Number(book.rabatt);
+      if (Number.isNaN(discount) || discount < minDiscount) return false;
+    }
+
+    if (minRating !== undefined) {
+      const rating = Number(book.rating);
+      if (Number.isNaN(rating) || rating < minRating) return false;
+    }
+
+    return true;
+  });
+};
+
 const defaultFilters: Filters = {
   titel: '',
   isbn: '',
@@ -60,6 +134,7 @@ const quickTags = ['JavaScript', 'TypeScript', 'Java', 'Python', 'Bestseller', '
 
 export const BookSearchFormMUI: React.FC = () => {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [allBooks, setAllBooks] = useState<BuchDTO[]>([]);
   const [books, setBooks] = useState<BuchDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,24 +145,18 @@ export const BookSearchFormMUI: React.FC = () => {
   const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
 
   const params = useMemo(() => {
-    const p: Record<string, string | number | boolean | string[]> = {
-      page,
-      size: pageSize,
-      sort: filters.sort,
+    const p: Record<string, string | number | boolean> = {
+      page: 0,
+      size: 10,
     };
     if (filters.titel) p.titel = filters.titel;
-    if (filters.isbn) p.isbn = filters.isbn;
     if (filters.art) p.art = filters.art;
     if (filters.lieferbar) p.lieferbar = true;
-    if (filters.preisVon) p.preisVon = filters.preisVon;
-    if (filters.preisBis) p.preisBis = filters.preisBis;
-    if (filters.rabattAb) p.rabattAb = filters.rabattAb;
-    if (filters.ratingMin) p.ratingMin = filters.ratingMin;
     if (filters.datumVon) p.datumVon = filters.datumVon;
     if (filters.datumBis) p.datumBis = filters.datumBis;
-    if (filters.schlagwoerter.length) p.schlagwoerter = filters.schlagwoerter;
+    if (filters.schlagwoerter.length) p.schlagwoerter = filters.schlagwoerter.join(',');
     return p;
-  }, [filters, page, pageSize]);
+  }, [filters, pageSize]);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -96,11 +165,9 @@ export const BookSearchFormMUI: React.FC = () => {
       const { data } = await axios.get(baseUrl, { params });
       const booksArray = data._embedded?.buecher || data.content || data;
       const rawBooks = Array.isArray(booksArray) ? booksArray : [];
-      const totalElementsFromResponse = data.page?.totalElements ?? data.totalElements ?? rawBooks.length;
-      const totalPagesFromResponse =
-        data.page?.totalPages ?? data.totalPages ?? Math.max(1, Math.ceil(totalElementsFromResponse / pageSize));
-      setBooks(rawBooks);
-      setTotalPages(totalPagesFromResponse);
+      const filteredBooks = filterBooksClient(rawBooks, filters);
+      const sortedBooks = sortBooksClient(filteredBooks, filters.sort);
+      setAllBooks(sortedBooks);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(`HTTP Error: ${err.response?.status || err.message}`);
@@ -116,7 +183,19 @@ export const BookSearchFormMUI: React.FC = () => {
   useEffect(() => {
     fetchBooks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  }, [params, filters.sort]);
+
+  useEffect(() => {
+    const maxPages = Math.max(1, Math.ceil(allBooks.length / pageSize));
+    if (page > maxPages) {
+      setPage(maxPages);
+      return;
+    }
+    const start = (page - 1) * pageSize;
+    const paginated = allBooks.slice(start, start + pageSize);
+    setBooks(paginated);
+    setTotalPages(maxPages);
+  }, [allBooks, page, pageSize]);
 
   const handleReset = () => {
     setFilters(defaultFilters);
@@ -225,32 +304,6 @@ export const BookSearchFormMUI: React.FC = () => {
             helperText="0–1 (z.B. 0.2 = 20%)"
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <TextField
-            label="Erscheinung ab"
-            type="date"
-            value={filters.datumVon}
-            onChange={(e) => {
-              setFilters((p) => ({ ...p, datumVon: e.target.value }));
-              setPage(1);
-            }}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <TextField
-            label="Erscheinung bis"
-            type="date"
-            value={filters.datumBis}
-            onChange={(e) => {
-              setFilters((p) => ({ ...p, datumBis: e.target.value }));
-              setPage(1);
-            }}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
@@ -260,7 +313,7 @@ export const BookSearchFormMUI: React.FC = () => {
             value={filters.ratingMin}
             min={0}
             max={5}
-            step={0.5}
+            step={1}
             valueLabelDisplay="auto"
             onChange={(_, val) => {
               setFilters((p) => ({ ...p, ratingMin: val as number }));
