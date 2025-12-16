@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -10,7 +10,6 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  Pagination,
   Select,
   Slider,
   Stack,
@@ -130,20 +129,22 @@ const quickTags = ['JavaScript', 'TypeScript', 'Java', 'Python', 'Bestseller', '
 
 export const BookSearchFormMUI: React.FC = () => {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
-  const [allBooks, setAllBooks] = useState<BuchDTO[]>([]);
   const [books, setBooks] = useState<BuchDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchedPagesRef = useRef<Set<number>>(new Set());
 
   const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 5;
   const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
 
-  const params = useMemo(() => {
+  const baseParams = useMemo(() => {
     const p: Record<string, string | number | boolean> = {
-      page: 0,
-      size: 10,
+      size: pageSize,
     };
     if (filters.titel) p.titel = filters.titel;
     if (filters.art) p.art = filters.art;
@@ -152,48 +153,84 @@ export const BookSearchFormMUI: React.FC = () => {
     return p;
   }, [filters, pageSize]);
 
-  const fetchBooks = async () => {
-    setLoading(true);
+  const fetchPage = async (pageToLoad: number) => {
+    if (fetchedPagesRef.current.has(pageToLoad)) return;
+    fetchedPagesRef.current.add(pageToLoad);
+
+    const isFirstPage = pageToLoad === 0;
+    if (isFirstPage) setLoading(true);
+    else setLoadingMore(true);
     setError(null);
     try {
-      const { data } = await axios.get(baseUrl, { params });
+      const { data } = await axios.get(baseUrl, {
+        params: { ...baseParams, page: pageToLoad },
+      });
       const booksArray = data._embedded?.buecher || data.content || data;
       const rawBooks = Array.isArray(booksArray) ? booksArray : [];
       const filteredBooks = filterBooksClient(rawBooks, filters);
-      const sortedBooks = sortBooksClient(filteredBooks, filters.sort);
-      setAllBooks(sortedBooks);
+      setBooks((prev) => {
+        const merged = isFirstPage ? filteredBooks : [...prev, ...filteredBooks];
+        const deduped = Array.from(
+          merged.reduce((map, book) => map.set(book.isbn, book), new Map<string, BuchDTO>()).values(),
+        );
+        return sortBooksClient(deduped, filters.sort);
+      });
+
+      const totalPagesFromResponse = data.page?.totalPages ?? data.totalPages;
+      const more =
+        typeof totalPagesFromResponse === 'number'
+          ? pageToLoad + 1 < totalPagesFromResponse
+          : rawBooks.length > 0;
+      setHasMore(more);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(`HTTP Error: ${err.response?.status || err.message}`);
       } else {
         setError(err instanceof Error ? err.message : 'Fehler beim Laden der Bücher');
       }
-      setBooks([]);
     } finally {
-      setLoading(false);
+      if (isFirstPage) setLoading(false);
+      else setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchBooks();
+    setPage(0);
+    setHasMore(true);
+    setBooks([]);
+    fetchedPagesRef.current = new Set();
+    fetchPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, filters.sort]);
+  }, [baseParams, filters.sort]);
 
   useEffect(() => {
-    const maxPages = Math.max(1, Math.ceil(allBooks.length / pageSize));
-    if (page > maxPages) {
-      setPage(maxPages);
-      return;
-    }
-    const start = (page - 1) * pageSize;
-    const paginated = allBooks.slice(start, start + pageSize);
-    setBooks(paginated);
-    setTotalPages(maxPages);
-  }, [allBooks, page, pageSize]);
+    if (page === 0) return;
+    fetchPage(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: '200px 0px 0px 0px' },
+    );
+
+    observerRef.current.observe(sentinelRef.current);
+
+    return () => observerRef.current?.disconnect();
+  }, [hasMore, loading, loadingMore]);
 
   const handleReset = () => {
     setFilters(defaultFilters);
-    setPage(1);
+    setPage(0);
   };
 
   const toggleTag = (tag: string) => {
@@ -202,7 +239,7 @@ export const BookSearchFormMUI: React.FC = () => {
       const schlagwoerter = exists ? prev.schlagwoerter.filter((t) => t !== tag) : [...prev.schlagwoerter, tag];
       return { ...prev, schlagwoerter };
     });
-    setPage(1);
+    setPage(0);
   };
 
   return (
@@ -371,7 +408,16 @@ export const BookSearchFormMUI: React.FC = () => {
       </Stack>
 
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <Button variant="contained" onClick={() => fetchBooks()} startIcon={<SearchIcon />}>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setPage(0);
+            setHasMore(true);
+            setBooks([]);
+            fetchPage(0);
+          }}
+          startIcon={<SearchIcon />}
+        >
           Suchen
         </Button>
         <Button variant="outlined" color="secondary" onClick={handleReset} startIcon={<RefreshIcon />}>
@@ -398,15 +444,13 @@ export const BookSearchFormMUI: React.FC = () => {
               <BookMediaMUI key={book.isbn} book={book} />
             ))}
           </div>
-          {totalPages > 1 && (
-            <Pagination
-              count={totalPages}
-              page={page}
-              color="primary"
-              onChange={(_, value) => setPage(value)}
-              disabled={loading}
-            />
+          <Box ref={sentinelRef} sx={{ height: 8, width: '100%' }} />
+          {(loadingMore || hasMore) && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              {loadingMore ? <CircularProgress size={26} /> : <Typography variant="body2">Weitere Bücher laden ...</Typography>}
+            </Box>
           )}
+          {!hasMore && <Typography variant="body2" color="text.secondary">Keine weiteren Bücher.</Typography>}
         </Stack>
       )}
 
