@@ -25,7 +25,22 @@ export function AppShell() {
                 {profile?.firstName ?? profile?.username ?? 'Account'}
               </Button>
               <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                <MenuItem onClick={() => setAnchorEl(null)}>Profil</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    navigate('/profile');
+                  }}
+                >
+                  Profil
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    navigate('/admin');
+                  }}
+                >
+                  Admin Panel
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
