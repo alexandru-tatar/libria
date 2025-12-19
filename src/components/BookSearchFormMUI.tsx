@@ -24,6 +24,7 @@ import type { BuchDTO } from '../types/book';
 import { BookMediaMUI } from './MediaMUI';
 import './SearchForm.css';
 import { LoadMoreBar } from './LoadMoreBar';
+import { api } from '../api/axios';
 
 type BookArt = '' | 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
 
@@ -178,7 +179,6 @@ export const BookSearchFormMUI: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const pageSize = 5;
-  const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
 
   const queryParams = useMemo(() => buildQueryParams(filters, pageSize), [filters, pageSize]);
   const hasMore = totalPages === 0 ? true : page + 1 < totalPages;
@@ -201,7 +201,7 @@ export const BookSearchFormMUI: React.FC = () => {
       setError(null);
 
       try {
-        const { data } = await axios.get<ApiResponse>(baseUrl, {
+        const { data } = await api.get<ApiResponse>('/', {
           params: { ...queryParams, page: pageToLoad },
         });
 
@@ -223,7 +223,7 @@ export const BookSearchFormMUI: React.FC = () => {
         isReplace ? setLoading(false) : setLoadingMore(false);
       }
     },
-    [baseUrl, filters, queryParams],
+    [api, filters, queryParams],
   );
 
   useEffect(() => {
