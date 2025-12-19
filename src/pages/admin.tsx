@@ -1,11 +1,12 @@
 import { Box, Container, Typography, Paper } from '@mui/material';
-import { useAuth } from '../auth/useAuth';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
+import { BookManagement } from '../components/BookManagement';
+import { UserManagement } from '../components/UserManagement';
 
 export function AdminPage() {
   const { roles } = useAuth();
 
-  // Nur Admins dürfen diese Seite sehen
   if (!roles.includes('admin')) {
     return <Navigate to="/" />;
   }
@@ -19,18 +20,27 @@ export function AdminPage() {
         Verwaltungsbereich für Administratoren
       </Typography>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Bücherverwaltung
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Bücher hinzufügen, bearbeiten und verwalten
+          Bücher hinzufügen und verwalten
         </Typography>
         <Box sx={{ mt: 2 }}>
-          {/* Hier kommt später die Buchverwaltung */}
-          <Typography variant="caption" color="text.disabled">
-            In Entwicklung...
-          </Typography>
+          <BookManagement canEditBooks={roles.includes('admin')} />
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Benutzerverwaltung
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Rollen, Konten und Berechtigungen verwalten
+        </Typography>
+        <Box sx={{ mt: 2 }}>
+          <UserManagement />
         </Box>
       </Paper>
     </Container>
