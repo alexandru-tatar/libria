@@ -13,6 +13,7 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
   return (
     <Card
       variant="outlined"
+      className="book-card"
       sx={{
         height: '100%',
         display: 'flex',
