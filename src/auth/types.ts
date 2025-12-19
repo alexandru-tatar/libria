@@ -3,7 +3,8 @@ export type AuthState = {
   token?: string;
   profile?: Keycloak.KeycloakProfile;
   roles: string[];
-  login: (redirectTo?: string) => Promise<void>;
+  login: (username: string, password: string, redirectTo?: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  isAdmin: boolean;
 };
