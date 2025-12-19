@@ -7,7 +7,7 @@ export function UserManagement() {
         Benutzerverwaltung
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Hier können Sie Benutzer verwalten.
+        Hier kann man Benutzerkonten, Rollen und Berechtigungen verwalten.
       </Typography>
     </Box>
   );
