@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { isAxiosError } from 'axios';
 import {
   Box, Stack, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Snackbar, Alert,
 } from '@mui/material';
@@ -16,6 +16,7 @@ import { RabattField } from './FormFields/RabattField';
 import { HomepageField } from './FormFields/HomePageField';
 import { DatumField } from './FormFields/DatumField';
 import type { BuchDTO } from '../types/book';
+import { api } from '../api/axios';
 
 export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -39,14 +40,13 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
   const onCreate = async (data: BuchDTO) => {
     setSubmitting(true);
     try {
-      const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/rest`;
-      await axios.post(baseUrl, data);
+      await api.post('/', data);
       const title = (data as Partial<BuchDTO>)?.titel?.titel ?? data.isbn ?? 'Buch';
       setSuccessMsg(`${title} erfolgreich angelegt.`);
       setSuccessOpen(true);
       closeCreate();
     } catch (err) {
-      const msg = axios.isAxiosError(err)
+      const msg = isAxiosError(err)
         ? `Fehler: ${err.response?.status ?? ''} ${err.response?.data ?? err.message}`
         : 'Unbekannter Fehler beim Anlegen';
       setErrorMsg(msg);
