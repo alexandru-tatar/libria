@@ -5,6 +5,7 @@ import type { AuthState } from './types';
 import { keycloak } from './keycloak';
 
 const REFRESH_INTERVAL_MS = 25_000;
+let keycloakInitPromise: Promise<boolean> | null = null;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -18,11 +19,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const bootstrap = async () => {
       try {
-        const authenticated = await keycloak.init({
-          onLoad: 'check-sso',
-          pkceMethod: 'S256',
-          silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-        });
+        if (!keycloakInitPromise) {
+          keycloakInitPromise = keycloak.init({
+            onLoad: 'check-sso',
+            pkceMethod: 'S256',
+            silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+          });
+        }
+
+        const authenticated = await keycloakInitPromise;
 
         setIsAuthenticated(authenticated);
         if (authenticated) {
@@ -39,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, REFRESH_INTERVAL_MS);
         }
       } catch (err) {
+        keycloakInitPromise = null;
         console.error('AuthProvider.bootstrap error', err);
       } finally {
         setLoading(false);
