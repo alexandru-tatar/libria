@@ -1,6 +1,19 @@
-import { useEffect } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../auth/useAuth';
 
 function Login() {
@@ -8,24 +21,86 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = new URLSearchParams(location.search).get('redirectTo') ?? '/app';
+  const redirectTo = new URLSearchParams(location.search).get('redirectTo') ?? '/';
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !loading) navigate(redirectTo, { replace: true });
   }, [isAuthenticated, loading, navigate, redirectTo]);
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await login(username, password);
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Login fehlgeschlagen';
+      setError(message || 'Login fehlgeschlagen');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '70vh' }}>
-      <Paper sx={{ p: 4, width: '100%', maxWidth: 420 }}>
-        <Stack spacing={3}>
-          <Typography variant="h5" fontWeight={600}>
-            Willkommen
-          </Typography>
+      <Paper sx={{ p: 4, width: '100%', maxWidth: 460 }}>
+        <Stack spacing={3} component="form" onSubmit={handleSubmit}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <LockOutlinedIcon color="primary" />
+            <Typography variant="h5" fontWeight={600}>
+              Anmelden
+            </Typography>
+          </Stack>
           <Typography variant="body1" color="text.secondary">
-            Bitte melde dich an, um fortzufahren.
+            Bitte gib deine Zugangsdaten ein, um dich anzumelden.
           </Typography>
-          <Button variant="contained" size="large" onClick={() => login(redirectTo)} disabled={loading}>
-            Mit Keycloak anmelden
+          {error ? (
+            <Alert severity="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          ) : null}
+          <TextField
+            label="Benutzername"
+            name="username"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            fullWidth
+          />
+          <TextField
+            label="Passwort"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            fullWidth
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword((val) => !val)} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            size="large"
+            type="submit"
+            disabled={loading || submitting}
+            sx={{ mt: 1 }}
+          >
+            {submitting ? 'Wird geprüft…' : 'Login'}
           </Button>
         </Stack>
       </Paper>

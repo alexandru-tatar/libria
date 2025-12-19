@@ -5,7 +5,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 
 export function AppShell() {
-  const { isAuthenticated, profile, login, logout } = useAuth();
+  const { isAuthenticated, profile, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
 
@@ -52,7 +52,7 @@ export function AppShell() {
               </Menu>
             </>
           ) : (
-            <Button color="inherit" onClick={() => login()}>
+            <Button color="inherit" onClick={() => navigate('/login')}>
               Login
             </Button>
           )}

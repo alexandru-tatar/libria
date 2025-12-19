@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { isAxiosError } from 'axios';
 import {
-  Box, Stack, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Snackbar, Alert,
+  Box,
+  Stack,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Fade,
+  Divider,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { IsbnField } from './FormFields/IsbnField';
@@ -21,10 +30,10 @@ import { api } from '../api/axios';
 export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [errorOpen, setErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<BuchDTO>({
     defaultValues: { titel: { titel: '', untertitel: '' } },
@@ -40,17 +49,49 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
   const onCreate = async (data: BuchDTO) => {
     setSubmitting(true);
     try {
-      await api.post('/', data);
+      const rawIsbn = data.isbn?.trim();
+      const isbnDigits = rawIsbn?.replace(/[-\s]/g, '') ?? '';
+      if (!isbnDigits || isbnDigits.length !== 13) {
+        throw new Error('ISBN muss 13 Stellen haben (nur Ziffern, Bindestriche werden entfernt)');
+      }
+
+      const valid =
+        (10 -
+          (isbnDigits
+            .slice(0, 12)
+            .split('')
+            .reduce((s, d, i) => s + +d * (i % 2 ? 3 : 1), 0) %
+            10)) %
+          10 ===
+        +isbnDigits[12];
+
+      if (!valid) throw new Error('Ungültige ISBN-13 Prüfsumme');
+
+      const payload: BuchDTO = {
+        ...data,
+        isbn: isbnDigits,
+        rating: Number(data.rating),
+        preis: Number(data.preis),
+        rabatt:
+          data.rabatt === undefined || data.rabatt === null || data.rabatt === ''
+            ? undefined
+            : Number(data.rabatt),
+        lieferbar: Boolean(data.lieferbar),
+        datum: data.datum || undefined,
+        schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
+      };
+
+      await api.post('/', payload);
       const title = (data as Partial<BuchDTO>)?.titel?.titel ?? data.isbn ?? 'Buch';
       setSuccessMsg(`${title} erfolgreich angelegt.`);
-      setSuccessOpen(true);
+      setSuccessDialogOpen(true);
       closeCreate();
     } catch (err) {
       const msg = isAxiosError(err)
-        ? `Fehler: ${err.response?.status ?? ''} ${err.response?.data ?? err.message}`
+        ? `Fehler: ${err.response?.status ?? ''} ${JSON.stringify(err.response?.data) || err.message}`
         : 'Unbekannter Fehler beim Anlegen';
       setErrorMsg(msg);
-      setErrorOpen(true);
+      setErrorDialogOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -98,27 +139,116 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={4000}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      <Dialog
+        open={successDialogOpen}
+        TransitionComponent={Fade}
+        onClose={() => setSuccessDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 2,
+            maxWidth: 480,
+            mx: 1.5,
+            boxShadow: 12,
+            border: '1px solid rgba(76, 175, 80, 0.2)',
+            position: 'relative',
+          },
+        }}
       >
-        <Alert onClose={() => setSuccessOpen(false)} severity="success" sx={{ width: '100%' }}>
-          {successMsg}
-        </Alert>
-      </Snackbar>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(76, 175, 80, 0.12)',
+            color: 'success.main',
+            px: 2,
+            py: 0.5,
+            borderRadius: 999,
+            fontWeight: 600,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          }}
+        >
+          ERFOLG
+        </Box>
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>Alles erledigt</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ textAlign: 'center', mb: 1.5, color: 'success.main' }}>
+            {successMsg || 'Aktion erfolgreich abgeschlossen.'}
+          </Typography>
+          <Divider sx={{ my: 1.5 }} />
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+            Du kannst jetzt ein weiteres Buch anlegen oder das Fenster schließen.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setSuccessDialogOpen(false)}
+            sx={{ borderRadius: 999, px: 3 }}
+            color="success"
+          >
+            Weiter
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-      <Snackbar
-        open={errorOpen}
-        autoHideDuration={6000}
-        onClose={() => setErrorOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      <Dialog
+        open={errorDialogOpen}
+        TransitionComponent={Fade}
+        onClose={() => setErrorDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 2,
+            maxWidth: 480,
+            mx: 1.5,
+            boxShadow: 12,
+            border: '1px solid rgba(244, 67, 54, 0.2)',
+            position: 'relative',
+          },
+        }}
       >
-        <Alert onClose={() => setErrorOpen(false)} severity="error" sx={{ width: '100%' }}>
-          {errorMsg}
-        </Alert>
-      </Snackbar>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            color: 'error.main',
+            px: 2,
+            py: 0.5,
+            borderRadius: 999,
+            fontWeight: 600,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          }}
+        >
+          FEHLER
+        </Box>
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>Hinweis</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ textAlign: 'center', mb: 1.5, color: 'error.main' }}>
+            {errorMsg || 'Es ist ein Fehler aufgetreten.'}
+          </Typography>
+          <Divider sx={{ my: 1.5 }} />
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+            Bitte prüfe deine Eingaben und versuche es erneut.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setErrorDialogOpen(false)}
+            sx={{ borderRadius: 999, px: 3 }}
+          >
+            Verstanden
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -7,6 +7,18 @@ interface IsbnFieldProps<T extends FieldValues> {
   errors: FieldErrors<T>;
 }
 
+export const isValidIsbn13 = (value: string): boolean => {
+  const digits = value.replace(/[\s-]/g, '');
+  if (!/^\d{13}$/.test(digits)) return false;
+
+  const checksum = digits
+    .slice(0, 12)
+    .split('')
+    .reduce((sum, d, i) => sum + Number(d) * (i % 2 === 0 ? 1 : 3), 0);
+
+  return (10 - (checksum % 10)) % 10 === +digits[12];
+};
+
 export function IsbnField<T extends FieldValues>({ name, control, errors }: IsbnFieldProps<T>) {
   return (
     <GenericField
@@ -17,12 +29,7 @@ export function IsbnField<T extends FieldValues>({ name, control, errors }: Isbn
       placeholder="978-0-007-00644-1"
       rules={{
         required: "ISBN ist erforderlich",
-        pattern: {
-          value: /^97[89]-\d-\d{3}-\d{5}-\d$/,
-          message: "Ungültiges ISBN-13 Format (978-X-XXX-XXXXX-X)",
-        },
-        minLength: { value: 17, message: "ISBN-13 muss 17 Zeichen lang sein (inkl. Bindestriche)" },
-        maxLength: { value: 17, message: "ISBN-13 muss 17 Zeichen lang sein (inkl. Bindestriche)" },
+        validate: (value) => isValidIsbn13(String(value)) || "Ungültige ISBN-13",
       }}
     />
   );
