@@ -7,9 +7,14 @@ import { useForm } from 'react-hook-form';
 import { IsbnField } from './FormFields/IsbnField';
 import { RatingField } from './FormFields/RatingField';
 import { PreisField } from './FormFields/PreisField';
+import { LieferbarField } from './FormFields/LieferbarField';
 import { TitelFields } from './FormFields/TitelField';
 import { AbbildungField } from './FormFields/AbbildungField';
 import { ArtField } from './FormFields/ArtField';
+import { SchlagwoerterField } from './FormFields/SchlagwoerterField';
+import { RabattField } from './FormFields/RabattField';
+import { HomepageField } from './FormFields/HomePageField';
+import { DatumField } from './FormFields/DatumField';
 import type { BuchDTO } from '../types/book';
 
 export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
@@ -76,6 +81,11 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
             <RatingField<BuchDTO> name="rating" control={control} errors={errors} />
             <ArtField<BuchDTO> name="art" control={control} errors={errors} />
             <PreisField<BuchDTO> name="preis" control={control} errors={errors} />
+            <RabattField<BuchDTO> name="rabatt" control={control} errors={errors} />
+            <LieferbarField<BuchDTO> name="lieferbar" control={control} errors={errors} />
+            <DatumField<BuchDTO> name="datum" control={control} errors={errors} />
+            <HomepageField<BuchDTO> name="homepage" control={control} errors={errors} />
+            <SchlagwoerterField<BuchDTO> name="schlagwoerter" control={control} errors={errors} />
             <TitelFields<BuchDTO> control={control} errors={errors} />
             <AbbildungField<BuchDTO> name="abbildungen" control={control} errors={errors} />
           </Box>
