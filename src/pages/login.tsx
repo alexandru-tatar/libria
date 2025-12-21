@@ -15,6 +15,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../auth/useAuth';
+import { PostLoginLogo } from '../components/PostLoginLogo';
 
 function Login() {
   const { isAuthenticated, login, loading } = useAuth();
@@ -27,10 +28,11 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !loading) navigate(redirectTo, { replace: true });
-  }, [isAuthenticated, loading, navigate, redirectTo]);
+    if (isAuthenticated && !loading && !showCelebration) navigate(redirectTo, { replace: true });
+  }, [isAuthenticated, loading, navigate, redirectTo, showCelebration]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -38,7 +40,8 @@ function Login() {
     setSubmitting(true);
     try {
       await login(username, password);
-      navigate(redirectTo, { replace: true });
+      setShowCelebration(true);
+      setTimeout(() => navigate(redirectTo, { replace: true }), 1300);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login fehlgeschlagen';
       setError(message || 'Login fehlgeschlagen');
@@ -46,6 +49,14 @@ function Login() {
       setSubmitting(false);
     }
   };
+
+  if (showCelebration) {
+    return (
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '70vh' }}>
+        <PostLoginLogo />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '70vh' }}>

@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { HomePage } from '../pages/HomePage';
 
 const LoginPage = lazy(() => import('../pages/login'));
+const LogoutPage = lazy(() => import('../pages/logout'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
 const ProfilePage = lazy(() => import('../pages/profile'));
 const AdminPage = lazy(() => import('../pages/admin'));
@@ -24,6 +25,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={null}>
             <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/logout',
+        element: (
+          <Suspense fallback={null}>
+            <LogoutPage />
           </Suspense>
         ),
       },

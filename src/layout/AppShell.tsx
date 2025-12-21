@@ -3,6 +3,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import logoImage from '../assets/logo/logo.png';
 
 export function AppShell() {
   const { isAuthenticated, profile, logout } = useAuth();
@@ -16,9 +17,13 @@ export function AppShell() {
           <IconButton color="inherit" edge="start" sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
-            Libria
-          </Typography>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', flexGrow: 1 }}
+            onClick={() => navigate('/')}
+          >
+            <Box component="img" src={logoImage} alt="Libria" sx={{ height: 36, width: 'auto', borderRadius: 1 }} />
+            <Typography variant="h6">Libria</Typography>
+          </Box>
           {isAuthenticated ? (
             <>
               <Button color="inherit" onClick={(e) => setAnchorEl(e.currentTarget)}>
@@ -44,7 +49,7 @@ export function AppShell() {
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
-                    logout();
+                    navigate('/logout');
                   }}
                 >
                   Logout
