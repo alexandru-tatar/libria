@@ -1,6 +1,6 @@
-import type { FieldValues, Control, FieldErrors, Path } from "react-hook-form";
-import { GenericField } from "./GenericField";
-import { isValidIsbn13 } from "./isbn";
+import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import { GenericField } from './GenericField';
+import { isValidIsbn13 } from './isbn';
 
 interface IsbnFieldProps<T extends FieldValues> {
   name: Path<T>;
@@ -17,8 +17,8 @@ export function IsbnField<T extends FieldValues>({ name, control, errors }: Isbn
       label="ISBN-13"
       placeholder="978-0-007-00644-1"
       rules={{
-        required: "ISBN ist erforderlich",
-        validate: (value) => isValidIsbn13(String(value)) || "Ungültige ISBN-13",
+        required: 'ISBN ist erforderlich',
+        validate: (value) => isValidIsbn13(String(value)) || 'Ungültige ISBN-13',
       }}
     />
   );
