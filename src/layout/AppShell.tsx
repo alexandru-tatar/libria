@@ -1,7 +1,7 @@
 import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import logoImage from '../assets/logo/logo.png';
 
@@ -9,6 +9,7 @@ export function AppShell() {
   const { isAuthenticated, profile, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
@@ -24,6 +25,13 @@ export function AppShell() {
             <Box component="img" src={logoImage} alt="Libria" sx={{ height: 36, width: 'auto', borderRadius: 1 }} />
             <Typography variant="h6">Libria</Typography>
           </Box>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/suche')}
+            sx={{ fontWeight: location.pathname === '/suche' ? 700 : undefined }}
+          >
+            Suche
+          </Button>
           {isAuthenticated ? (
             <>
               <Button color="inherit" onClick={(e) => setAnchorEl(e.currentTarget)}>
