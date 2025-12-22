@@ -72,10 +72,7 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
         isbn: isbnDigits,
         rating: Number(data.rating),
         preis: Number(data.preis),
-        rabatt:
-          data.rabatt === undefined || data.rabatt === null || data.rabatt === ''
-            ? undefined
-            : Number(data.rabatt),
+        rabatt: data.rabatt === undefined || data.rabatt === null ? undefined : Number(data.rabatt),
         lieferbar: Boolean(data.lieferbar),
         datum: data.datum || undefined,
         schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
