@@ -1,0 +1,45 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 5
+    versioning-strategy: auto
+    groups:
+      dev-deps:
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@types/*"
+      react-stack:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+          - "react-router*"
+      build-tools:
+        patterns:
+          - "vite*"
+          - "typescript"
+          - "@vitejs/*"
+    labels:
+      - "dependencies"
+      - "pnpm"
+    reviewers:
+      - "alexandru-tatar"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Europe/Berlin"
+    labels:
+      - "dependencies"
+      - "github-actions"
