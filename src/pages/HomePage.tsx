@@ -1,10 +1,5 @@
-// pages/HomePage.tsx
-import { BookSearchFormMUI } from '../components/BookSearchFormMUI';
+import Home from './landing/Home';
 
 export function HomePage() {
-  return (
-    <div>
-      <BookSearchFormMUI />
-    </div>
-  );
+  return <Home />;
 }

@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { HomePage } from '../pages/HomePage';
+import { SearchPage } from '../pages/SearchPage';
 
 const LoginPage = lazy(() => import('../pages/login'));
 const LogoutPage = lazy(() => import('../pages/logout'));
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <HomePage />,
+      },
+      {
+        path: '/suche',
+        element: <SearchPage />,
       },
       {
         path: '/login',
