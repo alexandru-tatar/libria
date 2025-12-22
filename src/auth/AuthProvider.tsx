@@ -30,7 +30,12 @@ type StoredAuth = {
   roles: string[];
 };
 
-const decodeJwtPayload = (token?: string): any | null => {
+type JwtPayload = {
+  realm_access?: { roles?: string[] };
+  resource_access?: Record<string, { roles?: string[] }>;
+};
+
+const decodeJwtPayload = (token?: string): JwtPayload | null => {
   if (!token) return null;
   const parts = token.split('.');
   if (parts.length < 2) return null;
@@ -38,7 +43,8 @@ const decodeJwtPayload = (token?: string): any | null => {
     const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
     const json = atob(padded);
-    return JSON.parse(json);
+    const parsed = JSON.parse(json) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as JwtPayload) : null;
   } catch {
     return null;
   }
@@ -116,9 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | undefined>();
   const [profile, setProfile] = useState<Keycloak.KeycloakProfile | undefined>();
   const [roles, setRoles] = useState<string[]>([]);
-  const profileRef = useRef<Keycloak.KeycloakProfile | undefined>();
+  const profileRef = useRef<Keycloak.KeycloakProfile | undefined>(undefined);
   const refreshSessionRef = useRef<(refreshTok?: string) => Promise<boolean>>(async () => false);
-  const refreshTimeout = useRef<number>();
+  const refreshTimeout = useRef<number | undefined>(undefined);
 
   const clearSession = useCallback(() => {
     if (refreshTimeout.current) window.clearTimeout(refreshTimeout.current);
@@ -237,7 +243,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshSession]);
 
   const login = useCallback(
-    async (username: string, password: string, _redirectTo?: string) => {
+    async (username: string, password: string, redirectTo?: string) => {
+      void redirectTo;
       const params = new URLSearchParams({
         grant_type: 'password',
         client_id: CLIENT_ID,

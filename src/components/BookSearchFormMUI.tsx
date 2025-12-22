@@ -197,7 +197,11 @@ export const BookSearchFormMUI: React.FC = () => {
   const fetchPage = useCallback(
     async (pageToLoad: number, mode: 'replace' | 'append') => {
       const isReplace = mode === 'replace';
-      isReplace ? setLoading(true) : setLoadingMore(true);
+      if (isReplace) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
       setError(null);
 
       try {
@@ -220,10 +224,14 @@ export const BookSearchFormMUI: React.FC = () => {
         if (axios.isAxiosError(e)) setError(`HTTP Error: ${e.response?.status ?? e.message}`);
         else setError(e instanceof Error ? e.message : 'Fehler beim Laden der Bücher');
       } finally {
-        isReplace ? setLoading(false) : setLoadingMore(false);
+        if (isReplace) {
+          setLoading(false);
+        } else {
+          setLoadingMore(false);
+        }
       }
     },
-    [api, filters, queryParams],
+    [filters, queryParams],
   );
 
   useEffect(() => {
