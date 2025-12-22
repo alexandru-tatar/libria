@@ -6,7 +6,7 @@ import { useAuth } from '../auth/useAuth';
 import logoImage from '../assets/logo/logo.png';
 
 export function AppShell() {
-  const { isAuthenticated, profile, logout } = useAuth();
+  const { isAuthenticated, profile, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
 
@@ -35,17 +35,19 @@ export function AppShell() {
                     setAnchorEl(null);
                     navigate('/profile');
                   }}
-                >
+              >
                   Profil
                 </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setAnchorEl(null);
-                    navigate('/admin');
-                  }}
-                >
-                  Admin Panel
-                </MenuItem>
+                {isAdmin && (
+                  <MenuItem
+                    onClick={() => {
+                      setAnchorEl(null);
+                      navigate('/admin');
+                    }}
+                  >
+                    Admin Panel
+                  </MenuItem>
+                )}
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
