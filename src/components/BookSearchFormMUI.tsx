@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 import {
   Box,
   Button,
@@ -19,244 +19,36 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import axios from 'axios';
-import type { BuchDTO } from '../types/book';
 import { BookMediaMUI } from './MediaMUI';
 import './SearchForm.css';
 import { LoadMoreBar } from './LoadMoreBar';
-import { api } from '../api/axios';
-
-type BookArt = '' | 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
-
-type Filters = {
-  titel: string;
-  isbn: string;
-  art: BookArt;
-  lieferbar: boolean;
-  preisVon: string;
-  preisBis: string;
-  rabattAb: string;
-  ratingMin: number;
-  schlagwoerter: string[];
-  sort: string;
-};
-
-type ApiResponse = {
-  _embedded?: { buecher?: BuchDTO[] };
-  content?: BuchDTO[];
-  page?: { totalPages?: number };
-  totalPages?: number;
-};
-
-const defaultFilters: Filters = {
-  titel: '',
-  isbn: '',
-  art: '',
-  lieferbar: false,
-  preisVon: '',
-  preisBis: '',
-  rabattAb: '',
-  ratingMin: 0,
-  schlagwoerter: [],
-  sort: 'titel,asc',
-};
+import { type BookArt, useBookFilters, useBookSearch } from '../hooks/useBookSearch';
 
 const quickTags = ['JavaScript', 'TypeScript', 'Java', 'Python', 'Bestseller', 'Neu'];
+const pageSize = 5;
 
-const normalizeIsbn = (value: string) => value.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
-const parseNumber = (value: string) => (value.trim() ? Number(value) : undefined);
+export const BookSearchFormMUI = () => {
+  const { filters, setFilterValue, toggleTag, resetFilters } = useBookFilters();
+  const { visible, loading, loadingMore, error, hasMore, loadMore, refetch, isEmpty } = useBookSearch(filters, pageSize);
 
-const extractBooks = (data: ApiResponse): BuchDTO[] => {
-  const embedded = data._embedded?.buecher;
-  if (Array.isArray(embedded)) return embedded;
-  if (Array.isArray(data.content)) return data.content;
-  return [];
-};
+  const handleSearch = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
-const extractTotalPages = (data: ApiResponse): number => {
-  const fromPage = data.page?.totalPages;
-  if (typeof fromPage === 'number') return fromPage;
-  if (typeof data.totalPages === 'number') return data.totalPages;
-  return 0;
-};
+  const handleReset = useCallback(() => {
+    resetFilters();
+  }, [resetFilters]);
 
-const sortBooks = (items: BuchDTO[], sort: string): BuchDTO[] => {
-  if (!sort) return items;
-  const [field, dir] = sort.split(',');
-  const direction = dir === 'desc' ? -1 : 1;
-
-  const valueOf = (book: BuchDTO): string | number => {
-    switch (field) {
-      case 'preis':
-        return Number(book.preis ?? 0);
-      case 'datum':
-        return book.datum ? new Date(book.datum).getTime() : 0;
-      case 'rating':
-        return Number(book.rating ?? 0);
-      default:
-        return book.titel?.titel ?? '';
-    }
-  };
-
-  return [...items].sort((a, b) => {
-    const aVal = valueOf(a);
-    const bVal = valueOf(b);
-
-    if (typeof aVal === 'string' || typeof bVal === 'string') {
-      return aVal.toString().localeCompare(bVal.toString(), 'de', { sensitivity: 'base' }) * direction;
-    }
-
-    if (aVal === bVal) return 0;
-    return aVal > bVal ? direction : -direction;
-  });
-};
-
-const filterBooks = (items: BuchDTO[], filters: Filters): BuchDTO[] => {
-  const selectedTags = filters.schlagwoerter.map((s) => s.toLowerCase());
-  const minPrice = parseNumber(filters.preisVon);
-  const maxPrice = parseNumber(filters.preisBis);
-  const minDiscount = parseNumber(filters.rabattAb);
-  const minRating = filters.ratingMin ? Number(filters.ratingMin) : undefined;
-  const isbnNeedle = filters.isbn.trim() ? normalizeIsbn(filters.isbn.trim()) : '';
-
-  return items.filter((book) => {
-    if (isbnNeedle) {
-      const candidate = normalizeIsbn(book.isbn ?? '');
-      if (!candidate.includes(isbnNeedle)) return false;
-    }
-
-    if (selectedTags.length) {
-      if (!book.schlagwoerter?.length) return false;
-      const bookTags = book.schlagwoerter.map((s) => s.toLowerCase());
-      if (!selectedTags.every((tag) => bookTags.includes(tag))) return false;
-    }
-
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      const price = Number(book.preis);
-      if (Number.isNaN(price)) return false;
-      if (minPrice !== undefined && price < minPrice) return false;
-      if (maxPrice !== undefined && price > maxPrice) return false;
-    }
-
-    if (minDiscount !== undefined) {
-      const discount = Number(book.rabatt);
-      if (Number.isNaN(discount) || discount < minDiscount) return false;
-    }
-
-    if (minRating !== undefined) {
-      const rating = Number(book.rating);
-      if (Number.isNaN(rating) || rating < minRating) return false;
-    }
-
-    return true;
-  });
-};
-
-const toggleItem = (items: string[], item: string) =>
-  items.includes(item) ? items.filter((x) => x !== item) : [...items, item];
-
-const dedupeByIsbn = (items: BuchDTO[]) =>
-  Array.from(items.reduce((m, b) => m.set(b.isbn, b), new Map<string, BuchDTO>()).values());
-
-const buildQueryParams = (filters: Filters, pageSize: number) => {
-  const params: Record<string, string | number | boolean> = { size: pageSize };
-  if (filters.titel) params.titel = filters.titel;
-  if (filters.art) params.art = filters.art;
-  if (filters.lieferbar) params.lieferbar = true;
-  if (filters.schlagwoerter.length) params.schlagwoerter = filters.schlagwoerter.join(',');
-  return params;
-};
-
-export const BookSearchFormMUI: React.FC = () => {
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
-
-  const [visible, setVisible] = useState<BuchDTO[]>([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const pageSize = 5;
-
-  const queryParams = useMemo(() => buildQueryParams(filters, pageSize), [filters, pageSize]);
-  const hasMore = totalPages === 0 ? true : page + 1 < totalPages;
-
-  const setFilterValue = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
-
-  const resetResults = useCallback(() => {
-    setVisible([]);
-    setPage(0);
-    setTotalPages(0);
-    setError(null);
-  }, []);
-
-  const fetchPage = useCallback(
-    async (pageToLoad: number, mode: 'replace' | 'append') => {
-      const isReplace = mode === 'replace';
-      if (isReplace) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      setError(null);
-
-      try {
-        const { data } = await api.get<ApiResponse>('/', {
-          params: { ...queryParams, page: pageToLoad },
-        });
-
-        const raw = extractBooks(data);
-        const filtered = filterBooks(raw, filters);
-        const sorted = sortBooks(filtered, filters.sort);
-
-        setVisible((prev) => {
-          const merged = isReplace ? sorted : [...prev, ...sorted];
-          return sortBooks(dedupeByIsbn(merged), filters.sort);
-        });
-
-        setTotalPages(extractTotalPages(data));
-        setPage(pageToLoad);
-      } catch (e) {
-        if (axios.isAxiosError(e)) setError(`HTTP Error: ${e.response?.status ?? e.message}`);
-        else setError(e instanceof Error ? e.message : 'Fehler beim Laden der Bücher');
-      } finally {
-        if (isReplace) {
-          setLoading(false);
-        } else {
-          setLoadingMore(false);
-        }
-      }
+  const handleToggleTag = useCallback(
+    (tag: string) => {
+      toggleTag(tag);
     },
-    [filters, queryParams],
+    [toggleTag],
   );
 
-  useEffect(() => {
-    resetResults();
-    void fetchPage(0, 'replace');
-  }, [queryParams, filters.sort, fetchPage, resetResults]);
-
-  const handleSearch = () => {
-    resetResults();
-    void fetchPage(0, 'replace');
-  };
-
-  const handleReset = () => setFilters(defaultFilters);
-
-  const handleToggleTag = (tag: string) => {
-    setFilters((prev) => ({ ...prev, schlagwoerter: toggleItem(prev.schlagwoerter, tag) }));
-  };
-
-  const handleLoadMore = () => {
-    if (loading || loadingMore) return;
-    if (!hasMore) return;
-    void fetchPage(page + 1, 'append');
-  };
-
-  const isEmpty = !loading && !error && visible.length === 0;
+  const handleLoadMore = useCallback(() => {
+    loadMore();
+  }, [loadMore]);
 
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 3, px: 2 }}>
