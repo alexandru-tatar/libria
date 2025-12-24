@@ -1,4 +1,13 @@
-import { Box, Card, CardContent, Container, Divider, Typography, Chip, Stack } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Container,
+  Divider,
+  Typography,
+  Chip,
+  Stack,
+} from '@mui/material';
 import { useAuth } from '../auth/useAuth';
 
 export function ProfilePage() {

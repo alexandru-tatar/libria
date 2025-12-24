@@ -6,11 +6,11 @@ const baseURL = `${import.meta.env.VITE_API_BASE_URL}/rest`;
 export const api = axios.create({ baseURL });
 
 api.interceptors.request.use((config) => {
-  const token = getAccessToken();
+    const token = getAccessToken();
 
-  if (token) {
-    config.headers?.set('Authorization', `Bearer ${token}`);
-  }
+    if (token) {
+        config.headers?.set('Authorization', `Bearer ${token}`);
+    }
 
-  return config;
+    return config;
 });

@@ -8,7 +8,11 @@ interface IsbnFieldProps<T extends FieldValues> {
   errors: FieldErrors<T>;
 }
 
-export function IsbnField<T extends FieldValues>({ name, control, errors }: IsbnFieldProps<T>) {
+export function IsbnField<T extends FieldValues>({
+  name,
+  control,
+  errors,
+}: IsbnFieldProps<T>) {
   return (
     <GenericField
       name={name}
@@ -18,7 +22,8 @@ export function IsbnField<T extends FieldValues>({ name, control, errors }: Isbn
       placeholder="978-0-007-00644-1"
       rules={{
         required: 'ISBN ist erforderlich',
-        validate: (value) => isValidIsbn13(String(value)) || 'Ungültige ISBN-13',
+        validate: (value) =>
+          isValidIsbn13(String(value)) || 'Ungültige ISBN-13',
       }}
     />
   );

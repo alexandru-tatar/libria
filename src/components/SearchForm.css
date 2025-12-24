@@ -1,4 +1,3 @@
-
 .book-results-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -11,7 +10,9 @@
   isolation: isolate;
   filter: grayscale(1) saturate(0.4) brightness(0.93);
   opacity: 0.85;
-  transition: filter 850ms ease, opacity 850ms ease;
+  transition:
+    filter 850ms ease,
+    opacity 850ms ease;
 }
 
 .book-results-grid.loading-more .book-card::after {

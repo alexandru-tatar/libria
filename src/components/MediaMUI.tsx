@@ -1,12 +1,33 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, Stack, Chip, Divider } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Box,
+  Stack,
+  Chip,
+  Divider,
+} from '@mui/material';
 import type { BookItems } from '../types/book';
 
 export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
-  const { titel, abbildungen, rating, preis, art, isbn, schlagwoerter, datum, lieferbar } = book;
+  const {
+    titel,
+    abbildungen,
+    rating,
+    preis,
+    art,
+    isbn,
+    schlagwoerter,
+    datum,
+    lieferbar,
+  } = book;
 
   const coverImage = abbildungen?.[0];
-  const coverUrl = coverImage ? `data:${coverImage.contentType};base64,...` : undefined;
+  const coverUrl = coverImage
+    ? `data:${coverImage.contentType};base64,...`
+    : undefined;
   const priceLabel = preis !== undefined ? `€${Number(preis).toFixed(2)}` : '';
   const ratingLabel = rating !== undefined ? `${rating}/5` : undefined;
 
@@ -28,13 +49,25 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
         maxWidth: '100%',
       }}
     >
-      <Box sx={{ position: 'relative', bgcolor: '#f7f8fb', width: 260, flexShrink: 0 }}>
+      <Box
+        sx={{
+          position: 'relative',
+          bgcolor: '#f7f8fb',
+          width: 260,
+          flexShrink: 0,
+        }}
+      >
         {coverUrl ? (
           <CardMedia
             component="img"
             image={coverUrl}
             alt={titel.titel}
-            sx={{ width: '100%', height: '100%', minHeight: 220, objectFit: 'cover' }}
+            sx={{
+              width: '100%',
+              height: '100%',
+              minHeight: 220,
+              objectFit: 'cover',
+            }}
           />
         ) : (
           <Box
@@ -42,7 +75,8 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               width: '100%',
               height: '100%',
               minHeight: 220,
-              background: 'radial-gradient(circle at 20% 20%, rgba(15,23,42,0.08), transparent 35%), radial-gradient(circle at 80% 10%, rgba(37,99,235,0.08), transparent 32%), radial-gradient(circle at 50% 80%, rgba(16,185,129,0.1), transparent 30%)',
+              background:
+                'radial-gradient(circle at 20% 20%, rgba(15,23,42,0.08), transparent 35%), radial-gradient(circle at 80% 10%, rgba(37,99,235,0.08), transparent 32%), radial-gradient(circle at 50% 80%, rgba(16,185,129,0.1), transparent 30%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -77,7 +111,11 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
             <Chip
               label={art}
               size="small"
-              sx={{ bgcolor: 'rgba(15,23,42,0.75)', color: '#e2e8f0', fontWeight: 600 }}
+              sx={{
+                bgcolor: 'rgba(15,23,42,0.75)',
+                color: '#e2e8f0',
+                fontWeight: 600,
+              }}
             />
           )}
         </Box>
@@ -115,11 +153,18 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
         }}
       >
         <Stack spacing={0.75}>
-          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 800, letterSpacing: 0.3 }}>
+          <Typography
+            variant="subtitle1"
+            component="h3"
+            sx={{ fontWeight: 800, letterSpacing: 0.3 }}
+          >
             {titel.titel}
           </Typography>
           {titel.untertitel && (
-            <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: '#64748b', lineHeight: 1.5 }}
+            >
               {titel.untertitel}
             </Typography>
           )}
@@ -130,14 +175,22 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
             <Chip
               label={`ISBN ${isbn}`}
               size="small"
-              sx={{ bgcolor: 'rgba(15,23,42,0.06)', color: '#0f172a', fontWeight: 600 }}
+              sx={{
+                bgcolor: 'rgba(15,23,42,0.06)',
+                color: '#0f172a',
+                fontWeight: 600,
+              }}
             />
           )}
           {datum && (
             <Chip
               label={new Date(datum).toLocaleDateString()}
               size="small"
-              sx={{ bgcolor: 'rgba(37,99,235,0.08)', color: '#0f172a', fontWeight: 600 }}
+              sx={{
+                bgcolor: 'rgba(37,99,235,0.08)',
+                color: '#0f172a',
+                fontWeight: 600,
+              }}
             />
           )}
           {lieferbar !== undefined && (
@@ -145,7 +198,9 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={lieferbar ? 'Lieferbar' : 'Nicht lieferbar'}
               size="small"
               sx={{
-                bgcolor: lieferbar ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                bgcolor: lieferbar
+                  ? 'rgba(16,185,129,0.15)'
+                  : 'rgba(239,68,68,0.15)',
                 color: lieferbar ? '#065f46' : '#991b1b',
                 fontWeight: 700,
               }}
@@ -160,7 +215,11 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
                 key={tag}
                 label={tag}
                 size="small"
-                sx={{ bgcolor: 'rgba(15,23,42,0.05)', color: '#0f172a', fontWeight: 600 }}
+                sx={{
+                  bgcolor: 'rgba(15,23,42,0.05)',
+                  color: '#0f172a',
+                  fontWeight: 600,
+                }}
               />
             ))}
           </Stack>
@@ -168,7 +227,12 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
 
         <Divider sx={{ borderColor: 'rgba(15,23,42,0.07)' }} />
 
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 'auto', color: '#475569' }}>
+        <Stack
+          direction="row"
+          spacing={1.25}
+          alignItems="center"
+          sx={{ mt: 'auto', color: '#475569' }}
+        >
           {ratingLabel && (
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               Rating: {ratingLabel}

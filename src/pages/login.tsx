@@ -23,7 +23,8 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = new URLSearchParams(location.search).get('redirectTo') ?? '/';
+  const redirectTo =
+    new URLSearchParams(location.search).get('redirectTo') ?? '/';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +33,8 @@ function Login() {
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !loading && !showCelebration) navigate(redirectTo, { replace: true });
+    if (isAuthenticated && !loading && !showCelebration)
+      navigate(redirectTo, { replace: true });
   }, [isAuthenticated, loading, navigate, redirectTo, showCelebration]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -44,7 +46,8 @@ function Login() {
       setShowCelebration(true);
       setTimeout(() => navigate(redirectTo, { replace: true }), 1300);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login fehlgeschlagen';
+      const message =
+        err instanceof Error ? err.message : 'Login fehlgeschlagen';
       setError(message || 'Login fehlgeschlagen');
     } finally {
       setSubmitting(false);
@@ -98,7 +101,10 @@ function Login() {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword((val) => !val)} edge="end">
+                  <IconButton
+                    onClick={() => setShowPassword((val) => !val)}
+                    edge="end"
+                  >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>

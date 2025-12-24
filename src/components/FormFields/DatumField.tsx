@@ -1,5 +1,5 @@
-import type { FieldValues, Control, FieldErrors, Path } from "react-hook-form";
-import { GenericField } from "./GenericField";
+import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import { GenericField } from './GenericField';
 
 interface DatumFieldProps<T extends FieldValues> {
   name: Path<T>;
@@ -7,7 +7,11 @@ interface DatumFieldProps<T extends FieldValues> {
   errors: FieldErrors<T>;
 }
 
-export function DatumField<T extends FieldValues>({ name, control, errors }: DatumFieldProps<T>) {
+export function DatumField<T extends FieldValues>({
+  name,
+  control,
+  errors,
+}: DatumFieldProps<T>) {
   return (
     <GenericField
       name={name}
@@ -16,8 +20,10 @@ export function DatumField<T extends FieldValues>({ name, control, errors }: Dat
       label="Datum (optional)"
       type="date"
       rules={{
-        validate: value =>
-          !value || /^\d{4}-\d{2}-\d{2}$/.test(String(value)) || "Datum muss im Format YYYY-MM-DD sein",
+        validate: (value) =>
+          !value ||
+          /^\d{4}-\d{2}-\d{2}$/.test(String(value)) ||
+          'Datum muss im Format YYYY-MM-DD sein',
       }}
     />
   );

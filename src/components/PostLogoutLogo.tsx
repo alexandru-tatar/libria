@@ -21,14 +21,30 @@ const ringDrift = keyframes`
 export function PostLogoutLogo() {
   return (
     <Fade in timeout={180}>
-      <Box sx={{ display: 'grid', placeItems: 'center', gap: 2, textAlign: 'center' }}>
-        <Box sx={{ position: 'relative', width: 144, height: 144, display: 'grid', placeItems: 'center' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          placeItems: 'center',
+          gap: 2,
+          textAlign: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            width: 144,
+            height: 144,
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
           <Box
             sx={{
               position: 'absolute',
               inset: 16,
               borderRadius: '50%',
-              background: 'radial-gradient(circle at 30% 30%, rgba(25,118,210,0.25), transparent 60%)',
+              background:
+                'radial-gradient(circle at 30% 30%, rgba(25,118,210,0.25), transparent 60%)',
               animation: `${halo} 1800ms ease-in-out infinite`,
             }}
           />
@@ -39,7 +55,8 @@ export function PostLogoutLogo() {
               borderRadius: '50%',
               border: '1px solid rgba(255,255,255,0.12)',
               animation: `${ringDrift} 10s linear infinite`,
-              maskImage: 'radial-gradient(circle at center, transparent 45%, black 55%)',
+              maskImage:
+                'radial-gradient(circle at center, transparent 45%, black 55%)',
             }}
           />
           <Box
@@ -54,7 +71,12 @@ export function PostLogoutLogo() {
               animation: `${slideAway} 1100ms ease-in-out forwards`,
             }}
           >
-            <Box component="img" src={logoImage} alt="Libria" sx={{ width: '68%', height: '68%', objectFit: 'contain' }} />
+            <Box
+              component="img"
+              src={logoImage}
+              alt="Libria"
+              sx={{ width: '68%', height: '68%', objectFit: 'contain' }}
+            />
           </Box>
         </Box>
         <Typography variant="h6" fontWeight={700}>
