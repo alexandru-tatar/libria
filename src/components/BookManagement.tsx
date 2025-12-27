@@ -35,7 +35,12 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<BuchDTO>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<BuchDTO>({
     defaultValues: { titel: { titel: '', untertitel: '' } },
   });
   const showCreate = canEditBooks ?? true;
@@ -52,7 +57,9 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
       const rawIsbn = data.isbn?.trim();
       const isbnDigits = rawIsbn?.replace(/[-\s]/g, '') ?? '';
       if (!isbnDigits || isbnDigits.length !== 13) {
-        throw new Error('ISBN muss 13 Stellen haben (nur Ziffern, Bindestriche werden entfernt)');
+        throw new Error(
+          'ISBN muss 13 Stellen haben (nur Ziffern, Bindestriche werden entfernt)',
+        );
       }
 
       const valid =
@@ -72,14 +79,18 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
         isbn: isbnDigits,
         rating: Number(data.rating),
         preis: Number(data.preis),
-        rabatt: data.rabatt === undefined || data.rabatt === null ? undefined : Number(data.rabatt),
+        rabatt:
+          data.rabatt === undefined || data.rabatt === null
+            ? undefined
+            : Number(data.rabatt),
         lieferbar: Boolean(data.lieferbar),
         datum: data.datum || undefined,
         schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
       };
 
       await api.post('/', payload);
-      const title = (data as Partial<BuchDTO>)?.titel?.titel ?? data.isbn ?? 'Buch';
+      const title =
+        (data as Partial<BuchDTO>)?.titel?.titel ?? data.isbn ?? 'Buch';
       setSuccessMsg(`${title} erfolgreich angelegt.`);
       setSuccessDialogOpen(true);
       closeCreate();
@@ -104,7 +115,11 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
       }}
     >
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-        {showCreate && <Button variant="contained" onClick={openCreate}>Buch anlegen</Button>}
+        {showCreate && (
+          <Button variant="contained" onClick={openCreate}>
+            Buch anlegen
+          </Button>
+        )}
       </Stack>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -114,23 +129,67 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
       <Dialog open={createOpen} onClose={closeCreate} fullWidth maxWidth="md">
         <DialogTitle>Buch anlegen</DialogTitle>
         <DialogContent>
-          <Box component="form" id="book-form" onSubmit={handleSubmit(onCreate)} sx={{ mt: 1, '& .MuiFormControl-root': { mb: 2 } }}>
+          <Box
+            component="form"
+            id="book-form"
+            onSubmit={handleSubmit(onCreate)}
+            sx={{ mt: 1, '& .MuiFormControl-root': { mb: 2 } }}
+          >
             <IsbnField<BuchDTO> name="isbn" control={control} errors={errors} />
-            <RatingField<BuchDTO> name="rating" control={control} errors={errors} />
+            <RatingField<BuchDTO>
+              name="rating"
+              control={control}
+              errors={errors}
+            />
             <ArtField<BuchDTO> name="art" control={control} errors={errors} />
-            <PreisField<BuchDTO> name="preis" control={control} errors={errors} />
-            <RabattField<BuchDTO> name="rabatt" control={control} errors={errors} />
-            <LieferbarField<BuchDTO> name="lieferbar" control={control} errors={errors} />
-            <DatumField<BuchDTO> name="datum" control={control} errors={errors} />
-            <HomepageField<BuchDTO> name="homepage" control={control} errors={errors} />
-            <SchlagwoerterField<BuchDTO> name="schlagwoerter" control={control} errors={errors} />
+            <PreisField<BuchDTO>
+              name="preis"
+              control={control}
+              errors={errors}
+            />
+            <RabattField<BuchDTO>
+              name="rabatt"
+              control={control}
+              errors={errors}
+            />
+            <LieferbarField<BuchDTO>
+              name="lieferbar"
+              control={control}
+              errors={errors}
+            />
+            <DatumField<BuchDTO>
+              name="datum"
+              control={control}
+              errors={errors}
+            />
+            <HomepageField<BuchDTO>
+              name="homepage"
+              control={control}
+              errors={errors}
+            />
+            <SchlagwoerterField<BuchDTO>
+              name="schlagwoerter"
+              control={control}
+              errors={errors}
+            />
             <TitelFields<BuchDTO> control={control} errors={errors} />
-            <AbbildungField<BuchDTO> name="abbildungen" control={control} errors={errors} />
+            <AbbildungField<BuchDTO>
+              name="abbildungen"
+              control={control}
+              errors={errors}
+            />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={closeCreate} disabled={submitting}>Abbrechen</Button>
-          <Button form="book-form" type="submit" variant="contained" disabled={submitting}>
+          <Button onClick={closeCreate} disabled={submitting}>
+            Abbrechen
+          </Button>
+          <Button
+            form="book-form"
+            type="submit"
+            variant="contained"
+            disabled={submitting}
+          >
             {submitting ? 'Bitte warten...' : 'Anlegen'}
           </Button>
         </DialogActions>
@@ -170,14 +229,24 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
         >
           ERFOLG
         </Box>
-        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>Alles erledigt</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>
+          Alles erledigt
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ textAlign: 'center', mb: 1.5, color: 'success.main' }}>
+          <Typography
+            variant="body1"
+            sx={{ textAlign: 'center', mb: 1.5, color: 'success.main' }}
+          >
             {successMsg || 'Aktion erfolgreich abgeschlossen.'}
           </Typography>
           <Divider sx={{ my: 1.5 }} />
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-            Du kannst jetzt ein weiteres Buch anlegen oder das Fenster schließen.
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: 'center' }}
+          >
+            Du kannst jetzt ein weiteres Buch anlegen oder das Fenster
+            schließen.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
@@ -226,13 +295,22 @@ export function BookManagement({ canEditBooks }: { canEditBooks?: boolean }) {
         >
           FEHLER
         </Box>
-        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>Hinweis</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center', pt: 5 }}>
+          Hinweis
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ textAlign: 'center', mb: 1.5, color: 'error.main' }}>
+          <Typography
+            variant="body1"
+            sx={{ textAlign: 'center', mb: 1.5, color: 'error.main' }}
+          >
             {errorMsg || 'Es ist ein Fehler aufgetreten.'}
           </Typography>
           <Divider sx={{ my: 1.5 }} />
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: 'center' }}
+          >
             Bitte prüfe deine Eingaben und versuche es erneut.
           </Typography>
         </DialogContent>

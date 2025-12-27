@@ -32,10 +32,23 @@ import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 
 import { BookMediaMUI } from './MediaMUI';
 import { LoadMoreBar } from './LoadMoreBar';
-import { type BookArt, useBookFilters, useBookSearch } from '../hooks/useBookSearch';
+import {
+  type BookArt,
+  useBookFilters,
+  useBookSearch,
+} from '../hooks/useBookSearch';
 import './SearchForm.css';
+import type { BookItems } from '../types/book';
+import { BookDetail } from './BookDetail';
 
-const quickTags = ['JavaScript', 'TypeScript', 'Java', 'Python', 'Bestseller', 'Neu'];
+const quickTags = [
+  'JavaScript',
+  'TypeScript',
+  'Java',
+  'Python',
+  'Bestseller',
+  'Neu',
+];
 const pageSize = 5;
 
 export const BookSearchFormMUI = () => {
@@ -43,13 +56,26 @@ export const BookSearchFormMUI = () => {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'));
 
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<BookItems | null>(null);
 
   const { filters, setFilterValue, toggleTag, resetFilters } = useBookFilters();
-  const { visible, loading, loadingMore, error, hasMore, loadMore, refetch, isEmpty } = useBookSearch(filters, pageSize);
+  const {
+    visible,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    loadMore,
+    refetch,
+    isEmpty,
+  } = useBookSearch(filters, pageSize);
 
   const handleSearch = useCallback(() => refetch(), [refetch]);
   const handleReset = useCallback(() => resetFilters(), [resetFilters]);
-  const handleToggleFilters = useCallback(() => setFiltersOpen((prev) => !prev), []);
+  const handleToggleFilters = useCallback(
+    () => setFiltersOpen((prev) => !prev),
+    [],
+  );
   const handleLoadMore = useCallback(() => loadMore(), [loadMore]);
 
   const activeFilterSummary = useMemo(() => {
@@ -59,17 +85,30 @@ export const BookSearchFormMUI = () => {
     if (filters.lieferbar) parts.push('lieferbar');
     if (filters.preisVon) parts.push(`≥ ${filters.preisVon}€`);
     if (filters.preisBis) parts.push(`≤ ${filters.preisBis}€`);
-    if (filters.rabattAb) parts.push(`Rabatt ≥ ${Math.round(Number(filters.rabattAb) * 100)}%`);
+    if (filters.rabattAb)
+      parts.push(`Rabatt ≥ ${Math.round(Number(filters.rabattAb) * 100)}%`);
     if (filters.ratingMin > 0) parts.push(`Rating ≥ ${filters.ratingMin}★`);
-    if (filters.schlagwoerter.length) parts.push(`${filters.schlagwoerter.length} Tags`);
+    if (filters.schlagwoerter.length)
+      parts.push(`${filters.schlagwoerter.length} Tags`);
     return parts.length ? parts.join(' · ') : 'Keine zusätzlichen Filter aktiv';
   }, [filters]);
 
   return (
-    <Box sx={{ maxWidth: 1160, mx: 'auto', px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+    <Box
+      sx={{
+        maxWidth: 1160,
+        mx: 'auto',
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+      }}
+    >
       {/* Header */}
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant={mdUp ? 'h4' : 'h5'} fontWeight={900} letterSpacing={-0.5}>
+        <Typography
+          variant={mdUp ? 'h4' : 'h5'}
+          fontWeight={900}
+          letterSpacing={-0.5}
+        >
           Bücher suchen
         </Typography>
       </Stack>
@@ -82,7 +121,10 @@ export const BookSearchFormMUI = () => {
           border: '1px solid',
           borderColor: 'divider',
           backdropFilter: 'blur(8px)',
-          backgroundColor: (t) => (t.palette.mode === 'dark' ? 'rgba(18,18,18,0.72)' : 'rgba(255,255,255,0.78)'),
+          backgroundColor: (t) =>
+            t.palette.mode === 'dark'
+              ? 'rgba(18,18,18,0.72)'
+              : 'rgba(255,255,255,0.78)',
           mb: 2,
         }}
       >
@@ -108,21 +150,46 @@ export const BookSearchFormMUI = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="flex-end">
-                <Button variant="contained" onClick={handleSearch} startIcon={<SearchIcon />} sx={{ borderRadius: 2 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                justifyContent="flex-end"
+              >
+                <Button
+                  variant="contained"
+                  onClick={handleSearch}
+                  startIcon={<SearchIcon />}
+                  sx={{ borderRadius: 2 }}
+                >
                   Suchen
                 </Button>
-                <Button variant="outlined" color="inherit" onClick={handleReset} startIcon={<RefreshIcon />} sx={{ borderRadius: 2 }}>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  onClick={handleReset}
+                  startIcon={<RefreshIcon />}
+                  sx={{ borderRadius: 2 }}
+                >
                   Reset
                 </Button>
-                <Button variant="text" onClick={handleToggleFilters} startIcon={<FilterListIcon />} sx={{ borderRadius: 2 }}>
+                <Button
+                  variant="text"
+                  onClick={handleToggleFilters}
+                  startIcon={<FilterListIcon />}
+                  sx={{ borderRadius: 2 }}
+                >
                   {filtersOpen ? 'Filter ausblenden' : 'Filter einblenden'}
                 </Button>
               </Stack>
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mt: 0.5 }}
+              >
                 <TuneRoundedIcon fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
                   {activeFilterSummary}
@@ -135,14 +202,31 @@ export const BookSearchFormMUI = () => {
 
       {/* Filters Panel */}
       <Collapse in={filtersOpen} timeout={240} unmountOnExit>
-        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 2 }}>
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 2,
+          }}
+        >
           <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1.5 }}
+            >
               <Typography variant="h6" fontWeight={900}>
                 Filter
               </Typography>
               <Chip
-                label={filters.schlagwoerter.length ? `${filters.schlagwoerter.length} Tags aktiv` : 'Keine Tags'}
+                label={
+                  filters.schlagwoerter.length
+                    ? `${filters.schlagwoerter.length} Tags aktiv`
+                    : 'Keine Tags'
+                }
                 color={filters.schlagwoerter.length ? 'primary' : 'default'}
                 variant={filters.schlagwoerter.length ? 'filled' : 'outlined'}
                 sx={{ borderRadius: 999 }}
@@ -168,7 +252,9 @@ export const BookSearchFormMUI = () => {
                     labelId="art-label"
                     label="Buchart"
                     value={filters.art}
-                    onChange={(e) => setFilterValue('art', e.target.value as BookArt)}
+                    onChange={(e) =>
+                      setFilterValue('art', e.target.value as BookArt)
+                    }
                   >
                     <MenuItem value="">Alle</MenuItem>
                     <MenuItem value="EPUB">EPUB</MenuItem>
@@ -234,7 +320,11 @@ export const BookSearchFormMUI = () => {
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={1}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="baseline"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Mindestbewertung
                     </Typography>
@@ -248,14 +338,26 @@ export const BookSearchFormMUI = () => {
                     max={5}
                     step={1}
                     valueLabelDisplay="auto"
-                    onChange={(_, v) => setFilterValue('ratingMin', v as number)}
+                    onChange={(_, v) =>
+                      setFilterValue('ratingMin', v as number)
+                    }
                   />
                 </Stack>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Grid
+                size={{ xs: 12, md: 6 }}
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
                 <FormControlLabel
-                  control={<Switch checked={filters.lieferbar} onChange={(e) => setFilterValue('lieferbar', e.target.checked)} />}
+                  control={
+                    <Switch
+                      checked={filters.lieferbar}
+                      onChange={(e) =>
+                        setFilterValue('lieferbar', e.target.checked)
+                      }
+                    />
+                  }
                   label="Nur lieferbar"
                 />
               </Grid>
@@ -289,7 +391,10 @@ export const BookSearchFormMUI = () => {
 
       {/* States */}
       {loading && (
-        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Card
+          elevation={0}
+          sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}
+        >
           <CardContent sx={{ py: 6 }}>
             <Stack alignItems="center" spacing={2}>
               <CircularProgress />
@@ -306,16 +411,28 @@ export const BookSearchFormMUI = () => {
       )}
 
       {!loading && !error && isEmpty && (
-        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Card
+          elevation={0}
+          sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}
+        >
           <CardContent sx={{ py: 6 }}>
             <Stack alignItems="center" spacing={1}>
               <Typography variant="h6" fontWeight={900}>
                 Keine Bücher gefunden
               </Typography>
-              <Typography color="text.secondary" align="center" sx={{ maxWidth: 520 }}>
+              <Typography
+                color="text.secondary"
+                align="center"
+                sx={{ maxWidth: 520 }}
+              >
                 Passe Suche, Filter oder Tags an und versuche es erneut.
               </Typography>
-              <Button onClick={handleReset} variant="outlined" startIcon={<RefreshIcon />} sx={{ mt: 1, borderRadius: 2 }}>
+              <Button
+                onClick={handleReset}
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                sx={{ mt: 1, borderRadius: 2 }}
+              >
                 Filter zurücksetzen
               </Button>
             </Stack>
@@ -326,7 +443,11 @@ export const BookSearchFormMUI = () => {
       {/* Results */}
       {!loading && !error && visible.length > 0 && (
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography variant="h6" fontWeight={900}>
               Ergebnisse
             </Typography>
@@ -338,16 +459,32 @@ export const BookSearchFormMUI = () => {
             </Stack>
           </Stack>
 
-          <div className={`book-results-grid${loadingMore ? ' loading-more' : ''}`}>
+          <div
+            className={`book-results-grid${loadingMore ? ' loading-more' : ''}`}
+          >
             {visible.map((book) => (
-              <BookMediaMUI key={book.isbn} book={book} />
+              <div
+                key={book.isbn}
+                onClick={() => setSelectedBook(book)}
+                style={{ cursor: 'pointer' }}
+              >
+                <BookMediaMUI book={book} />
+              </div>
             ))}
           </div>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-            <LoadMoreBar loading={loadingMore} hasMore={hasMore} onLoadMore={handleLoadMore} />
+            <LoadMoreBar
+              loading={loadingMore}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
+            />
           </Box>
         </Stack>
+      )}
+
+      {selectedBook && (
+        <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
     </Box>
   );

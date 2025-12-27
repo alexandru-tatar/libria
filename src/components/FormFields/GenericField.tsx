@@ -26,18 +26,29 @@ interface GenericFieldProps<T extends FieldValues> {
   rules?: RegisterOptions<T, Path<T>>;
 }
 
-function getErrorByPath<T extends FieldValues>(errors: FieldErrors<T> | undefined, path: Path<T> | string): FieldError | undefined {
+function getErrorByPath<T extends FieldValues>(
+  errors: FieldErrors<T> | undefined,
+  path: Path<T> | string,
+): FieldError | undefined {
   if (!errors) return undefined;
   const parts = String(path).split('.');
   let current: unknown = errors;
   for (const part of parts) {
-    if (current && typeof current === 'object' && Object.prototype.hasOwnProperty.call(current, part)) {
+    if (
+      current &&
+      typeof current === 'object' &&
+      Object.prototype.hasOwnProperty.call(current, part)
+    ) {
       current = (current as Record<string, unknown>)[part];
     } else {
       return undefined;
     }
   }
-  if (current && typeof current === 'object' && 'message' in (current as Record<string, unknown>)) {
+  if (
+    current &&
+    typeof current === 'object' &&
+    'message' in (current as Record<string, unknown>)
+  ) {
     return current as FieldError;
   }
   return undefined;

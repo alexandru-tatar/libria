@@ -1,4 +1,14 @@
-import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -19,31 +29,51 @@ export function AppShell() {
             <MenuIcon />
           </IconButton>
           <Box
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', flexGrow: 1 }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              flexGrow: 1,
+            }}
             onClick={() => navigate('/')}
           >
-            <Box component="img" src={logoImage} alt="Libria" sx={{ height: 36, width: 'auto', borderRadius: 1 }} />
+            <Box
+              component="img"
+              src={logoImage}
+              alt="Libria"
+              sx={{ height: 36, width: 'auto', borderRadius: 1 }}
+            />
             <Typography variant="h6">Libria</Typography>
           </Box>
           <Button
             color="inherit"
             onClick={() => navigate('/suche')}
-            sx={{ fontWeight: location.pathname === '/suche' ? 700 : undefined }}
+            sx={{
+              fontWeight: location.pathname === '/suche' ? 700 : undefined,
+            }}
           >
             Suche
           </Button>
           {isAuthenticated ? (
             <>
-              <Button color="inherit" onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <Button
+                color="inherit"
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+              >
                 {profile?.firstName ?? profile?.username ?? 'Account'}
               </Button>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
                     navigate('/profile');
                   }}
-              >
+                >
                   Profil
                 </MenuItem>
                 {isAdmin && (

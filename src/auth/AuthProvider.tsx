@@ -75,7 +75,9 @@ async function requestToken(body: URLSearchParams): Promise<TokenResponse> {
   return res.json() as Promise<TokenResponse>;
 }
 
-async function fetchUserProfile(accessToken: string): Promise<Keycloak.KeycloakProfile> {
+async function fetchUserProfile(
+  accessToken: string,
+): Promise<Keycloak.KeycloakProfile> {
   const res = await fetch(USERINFO_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -120,10 +122,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState<string | undefined>();
   const [refreshToken, setRefreshToken] = useState<string | undefined>();
-  const [profile, setProfile] = useState<Keycloak.KeycloakProfile | undefined>();
+  const [profile, setProfile] = useState<
+    Keycloak.KeycloakProfile | undefined
+  >();
   const [roles, setRoles] = useState<string[]>([]);
   const profileRef = useRef<Keycloak.KeycloakProfile | undefined>(undefined);
-  const refreshSessionRef = useRef<(refreshTok?: string) => Promise<boolean>>(async () => false);
+  const refreshSessionRef = useRef<(refreshTok?: string) => Promise<boolean>>(
+    async () => false,
+  );
   const refreshTimeout = useRef<number | undefined>(undefined);
 
   const clearSession = useCallback(() => {
@@ -139,14 +145,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistAuth(null);
   }, []);
 
-  const scheduleRefresh = useCallback((expiresInSeconds: number, refreshTok: string) => {
-    const ms = Math.max((expiresInSeconds - 30) * 1000, 5_000);
-    if (refreshTimeout.current) window.clearTimeout(refreshTimeout.current);
-    refreshTimeout.current = window.setTimeout(() => void refreshSessionRef.current(refreshTok), ms);
-  }, []);
+  const scheduleRefresh = useCallback(
+    (expiresInSeconds: number, refreshTok: string) => {
+      const ms = Math.max((expiresInSeconds - 30) * 1000, 5_000);
+      if (refreshTimeout.current) window.clearTimeout(refreshTimeout.current);
+      refreshTimeout.current = window.setTimeout(
+        () => void refreshSessionRef.current(refreshTok),
+        ms,
+      );
+    },
+    [],
+  );
 
   const applySession = useCallback(
-    (tokenResponse: TokenResponse, nextProfile?: Keycloak.KeycloakProfile, skipSchedule?: boolean) => {
+    (
+      tokenResponse: TokenResponse,
+      nextProfile?: Keycloak.KeycloakProfile,
+      skipSchedule?: boolean,
+    ) => {
       const accessToken = tokenResponse.access_token;
       const rolesFromToken = extractRoles(accessToken);
 
@@ -167,7 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles: rolesFromToken,
       });
 
-      if (!skipSchedule) scheduleRefresh(tokenResponse.expires_in, tokenResponse.refresh_token);
+      if (!skipSchedule)
+        scheduleRefresh(tokenResponse.expires_in, tokenResponse.refresh_token);
     },
     [scheduleRefresh],
   );
@@ -190,7 +207,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const tokenResponse = await requestToken(params);
         const nextProfile =
           profileRef.current ??
-          (tokenResponse.access_token ? await fetchUserProfile(tokenResponse.access_token) : undefined);
+          (tokenResponse.access_token
+            ? await fetchUserProfile(tokenResponse.access_token)
+            : undefined);
         applySession(tokenResponse, nextProfile);
         return true;
       } catch (err) {
@@ -222,7 +241,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAuthenticated(true);
           const expiresInSeconds = Math.floor(remainingMs / 1000);
           if (expiresInSeconds > 0) {
-            if (refreshTimeout.current) window.clearTimeout(refreshTimeout.current);
+            if (refreshTimeout.current)
+              window.clearTimeout(refreshTimeout.current);
             refreshTimeout.current = window.setTimeout(
               () => void refreshSession(stored.refreshToken),
               Math.max((expiresInSeconds - 30) * 1000, 5_000),
@@ -281,22 +301,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession, refreshToken]);
 
-  const value = useMemo<AuthState>(
-    () => {
-      const isAdmin = roles.includes('admin');
-      return {
-        isAuthenticated,
-        token,
-        profile,
-        roles,
-        isAdmin,
-        loading,
-        login,
-        logout,
-      };
-    },
-    [isAuthenticated, token, profile, roles, loading, login, logout],
-  );
+  const value = useMemo<AuthState>(() => {
+    const isAdmin = roles.includes('admin');
+    return {
+      isAuthenticated,
+      token,
+      profile,
+      roles,
+      isAdmin,
+      loading,
+      login,
+      logout,
+    };
+  }, [isAuthenticated, token, profile, roles, loading, login, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
