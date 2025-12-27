@@ -3,13 +3,16 @@ import { Box, Typography, Stack, Divider, Chip } from '@mui/material';
 import type { BookItems } from '../types/book';
 
 export const BookDetail = ({ book, onClose }: { book: BookItems; onClose: () => void }) => {
-  useEffect(() => {
-    const o = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => (document.body.style.overflow = o);
-  }, []);
 
-  const imageUrl = book.abbildungen?.[0] ? `/api/books/${book.id}/image/${book.abbildungen[0].id}` : null;
+useEffect(() => {
+  const originalOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  return () => {
+    document.body.style.overflow = originalOverflow;
+  };
+}, []);
+
+const imageUrl = book.abbildungen?.[0] ? `/api/books/${book.id}/image/${book.abbildungen[0].id}` : null;
 
   return (
     <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
@@ -67,6 +70,6 @@ export const BookDetail = ({ book, onClose }: { book: BookItems; onClose: () => 
   );
 };
 
-const Detail = ({ label, value }: { label: string; value: any }) => (
+const Detail = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
   <Box><Typography fontWeight={600}>{label}</Typography><Typography color="text.secondary">{value}</Typography></Box>
 );
