@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { BookManagement } from '../components/BookManagement';
 import { UserManagement } from '../components/UserManagement';
+import { BookStatistics } from '../components/BookStatistics';
 
 export function AdminPage() {
   const { roles } = useAuth();
@@ -19,6 +20,15 @@ export function AdminPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         Verwaltungsbereich für Administratoren
       </Typography>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Buch-Statistiken
+        </Typography>
+        <Box sx={{ mt: 2, mb: 2 }}>
+          <BookStatistics />
+        </Box>
+      </Paper>
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
