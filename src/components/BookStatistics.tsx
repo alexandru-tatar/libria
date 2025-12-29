@@ -1,32 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { getAllBooks } from '../api/books';
+import React from 'react';
 import type { Book } from '../types/book';
 
-export const BookStatistics: React.FC = () => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type BookStatisticsProps = {
+  books: Book[];
+};
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getAllBooks();
-        setBooks(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Fehler beim Laden der Buchdaten');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, []);
-
+export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
   const anzahl = books.length;
   const durchschnittspreis =
     anzahl > 0
@@ -36,9 +15,6 @@ export const BookStatistics: React.FC = () => {
     anzahl > 0
       ? (books.reduce((sum, b) => sum + (b.rating ?? 0), 0) / anzahl).toFixed(2)
       : '–';
-
-  if (loading) return <div>Statistiken werden geladen…</div>;
-  if (error) return <div>Fehler: {error}</div>;
 
   return (
     <div>
