@@ -1,6 +1,7 @@
 import { Box, Container, Typography, Paper, Stack, Button } from "@mui/material";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import BookTable from "../components/BookTable"; // Import der Tabelle
 
 export function AdminPage() {
   const { roles } = useAuth();
@@ -9,7 +10,7 @@ export function AdminPage() {
     return <Navigate to="/" />;
   }
 
-  // Dummy-Zahl für Bücheranzahl
+  // Optional: Anzahl Bücher aus der Datenbank via Hook oder Dummy
   const bookCount = 128;
 
   return (
@@ -43,9 +44,9 @@ export function AdminPage() {
           </Typography>
         </Stack>
 
-        {/* Leerer Platzhalter für zukünftige Buchverwaltung */}
+        {/* BookTable einbinden */}
         <Box sx={{ mt: 2 }}>
-          {/* Hier kann später z.B. die Tabelle der Bücher reinkommen */}
+          <BookTable pageSize={10} /> {/* optional Filter props übergeben */}
         </Box>
       </Paper>
     </Container>
