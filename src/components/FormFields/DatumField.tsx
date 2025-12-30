@@ -17,7 +17,7 @@ export function DatumField<T extends FieldValues>({
       name={name}
       control={control}
       errors={errors}
-      label="Datum (optional)"
+      label="Erscheinungsdatum (optional)"
       type="date"
       rules={{
         validate: (value) =>
