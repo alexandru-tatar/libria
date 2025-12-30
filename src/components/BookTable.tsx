@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
+import { useEffect } from 'react';
 import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
 import type { Filters } from '../hooks/useBookSearch';
 import type { BuchDTO } from '../types/book';
@@ -17,10 +18,16 @@ import type { BuchDTO } from '../types/book';
 type BookTableProps = {
   filters?: Filters;
   pageSize?: number;
+  onCountChange?: (count: number) => void; // Anzahl zurückgeben
 };
 
-export function BookTable({ filters = defaultFilters, pageSize = 10 }: BookTableProps) {
+export function BookTable({ filters = defaultFilters, pageSize = 10, onCountChange }: BookTableProps) {
   const { visible, loading, error, loadMore, hasMore } = useBookSearch(filters, pageSize);
+
+  // ✔ Problem 1 behoben: nur triggern, wenn sich die Anzahl ändert
+  useEffect(() => {
+    if (onCountChange) onCountChange(visible.length);
+  }, [visible.length, onCountChange]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;

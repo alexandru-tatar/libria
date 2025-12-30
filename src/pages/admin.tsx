@@ -1,17 +1,19 @@
 import { Box, Container, Typography, Paper, Stack, Button } from "@mui/material";
 import { Navigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../auth/useAuth";
-import BookTable from "../components/BookTable"; // Import der Tabelle
+import BookTable from "../components/BookTable"; // Tabelle
 
 export function AdminPage() {
   const { roles } = useAuth();
+  const [visibleCount, setVisibleCount] = useState<number | null>(null); // Anzahl sichtbarer Bücher
 
   if (!roles.includes("admin")) {
     return <Navigate to="/" />;
   }
 
-  // Optional: Anzahl Bücher aus der Datenbank via Hook oder Dummy
-  const bookCount = 128;
+  // Gesamtzahl als Fallback, falls keine Filter aktiv
+  const totalBooks = 128;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -40,13 +42,13 @@ export function AdminPage() {
           </Stack>
 
           <Typography variant="subtitle1" fontWeight={700}>
-            Anzahl Bücher: {bookCount}
+            Gefundene Bücher: {visibleCount !== null ? visibleCount : totalBooks}
           </Typography>
         </Stack>
 
-        {/* BookTable einbinden */}
+        {/* BookTable mit Callback zur Anzahl */}
         <Box sx={{ mt: 2 }}>
-          <BookTable pageSize={10} /> {/* optional Filter props übergeben */}
+          <BookTable pageSize={10} onCountChange={setVisibleCount} />
         </Box>
       </Paper>
     </Container>
