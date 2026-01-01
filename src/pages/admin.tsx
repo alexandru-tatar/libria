@@ -53,7 +53,6 @@ export function AdminPage() {
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Buch-Statistiken
         </Typography>
         <Box sx={{ mt: 2, mb: 2 }}>
           {loading ? (
