@@ -1,4 +1,3 @@
-// src/types/book.ts - KOMPLETTE Version basierend auf deinen Backend-DTOs
 
 export type Buchart = 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
 
@@ -16,14 +15,14 @@ export interface AbbildungDTO {
 
 export interface BuchDtoOhneRef {
   id?: string;
-  isbn: string;                    // REQUIRED
-  rating: number;                  // 0-5
+  isbn: string;
+  rating: number;
   art?: Buchart;
-  preis: number;                   // Decimal → number im Frontend
-  rabatt?: number;                 // 0-1
+  preis: number;
+  rabatt?: number;
   lieferbar?: boolean;
-  datum?: string;                  // ISO8601 string
-  homepage?: string;               // URL
+  datum?: string;
+  homepage?: string;
   schlagwoerter?: string[];
 }
 
@@ -32,6 +31,5 @@ export interface BuchDTO extends BuchDtoOhneRef {
   abbildungen?: AbbildungDTO[];
 }
 
-// Alias für Kompatibilität (falls du es woanders verwendest)
 export type BookItems = BuchDTO;
 export type Book = BuchDTO;
