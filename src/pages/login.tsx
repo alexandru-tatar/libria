@@ -116,7 +116,7 @@ function Login() {
             size="large"
             type="submit"
             disabled={loading || submitting}
-            sx={{ mt: 1 }}
+            sx={{ mt: 1, alignSelf: 'flex-end' }}
           >
             {submitting ? 'Wird geprüft…' : 'Login'}
           </Button>

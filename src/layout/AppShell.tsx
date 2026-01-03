@@ -8,16 +8,21 @@ import {
   MenuItem,
   Toolbar,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import logoImage from '../assets/logo/logo.png';
+import { useThemeMode } from '../theme/themeMode';
 
 export function AppShell() {
   const { isAuthenticated, profile, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { mode, toggleMode } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -55,6 +60,11 @@ export function AppShell() {
           >
             Suche
           </Button>
+          <Tooltip title={mode === 'dark' ? 'Hellmodus' : 'Dunkelmodus'}>
+            <IconButton color="inherit" onClick={toggleMode} sx={{ ml: 1 }}>
+              {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          </Tooltip>
           {isAuthenticated ? (
             <>
               <Button
