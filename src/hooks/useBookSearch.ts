@@ -269,7 +269,7 @@ export const useBookSearch = (filters: Filters, pageSize: number) => {
         items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
         page: pageToLoad,
         totalPages: extractTotalPages(data),
-        lastBatchSize: sorted.length,
+        lastBatchSize: raw.length,
         loading: prev.loading,
         loadingMore: prev.loadingMore,
         error: undefined,
@@ -326,6 +326,12 @@ export const useBookSearch = (filters: Filters, pageSize: number) => {
     if (state.loading || state.loadingMore || !hasMore) return;
     fetchPage(state.page + 1, 'append');
   }, [fetchPage, hasMore, state.loading, state.loadingMore, state.page]);
+
+  useEffect(() => {
+    if (!state.loading && !state.loadingMore && state.items.length === 0 && hasMore) {
+      loadMore();
+    }
+  }, [hasMore, loadMore, state.items.length, state.loading, state.loadingMore]);
 
   const refetch = useCallback(() => {
     startTransition(() => {
