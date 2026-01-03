@@ -168,7 +168,7 @@ export default function Home() {
   const glowXS = useSpring(glowX, { stiffness: 120, damping: 20 });
   const glowYS = useSpring(glowY, { stiffness: 120, damping: 20 });
 
-  const glowBg = useTransform([glowXS, glowYS], ([gx, gy]) => {
+  const glowBg = useTransform<number, string>([glowXS, glowYS], ([gx, gy]: number[]) => {
     const x = 50 + gx * 0.03;
     const y = 30 + gy * 0.03;
     return isDark
