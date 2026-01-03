@@ -9,7 +9,10 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect } from 'react';
 import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
 import type { Filters } from '../hooks/useBookSearch';
@@ -18,29 +21,36 @@ import type { BuchDTO } from '../types/book';
 type BookTableProps = {
   filters?: Filters;
   pageSize?: number;
-  onCountChange?: (count: number) => void; // Anzahl zurückgeben
+  onCountChange?: (count: number) => void;
 };
 
-export function BookTable({ filters = defaultFilters, pageSize = 10, onCountChange }: BookTableProps) {
-  const { visible, loading, error, loadMore, hasMore } = useBookSearch(filters, pageSize);
+const cell = {
+  px: 0.5,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
 
-  // ✔ Problem 1 behoben: nur triggern, wenn sich die Anzahl ändert
-  useEffect(() => {
-    if (onCountChange) onCountChange(visible.length);
-  }, [visible.length, onCountChange]);
+export function BookTable({
+  filters = defaultFilters,
+  pageSize = 10,
+  onCountChange,
+}: BookTableProps) {
+  const { visible, loading, error, loadMore, hasMore } = useBookSearch(
+    filters,
+    pageSize,
+  );
+  useEffect(
+    () => onCountChange?.(visible.length),
+    [visible.length, onCountChange],
+  );
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollTop + clientHeight >= scrollHeight - 10 && hasMore) {
-      loadMore();
-    }
+    if (scrollTop + clientHeight >= scrollHeight - 10 && hasMore) loadMore();
   };
-
-  const formatDate = (raw: string | undefined) => {
-    if (!raw) return '-';
-    const [year, month, day] = raw.split('T')[0].split('-');
-    return `${day}.${month}.${year}`;
-  };
+  const formatDate = (d?: string) =>
+    d ? d.split('T')[0].split('-').reverse().join('.') : '-';
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -48,46 +58,86 @@ export function BookTable({ filters = defaultFilters, pageSize = 10, onCountChan
         <Table stickyHeader size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ whiteSpace: 'nowrap' }}>ISBN</TableCell>
-              <TableCell>Titel</TableCell>
-              <TableCell>Art</TableCell>
-              <TableCell>Preis</TableCell>
-              <TableCell>Rabatt</TableCell>
-              <TableCell>Rating</TableCell>
-              <TableCell>Lieferbar</TableCell>
-              <TableCell>Schlagwörter</TableCell>
-              <TableCell sx={{ width: 100 }}>Datum</TableCell>
-              <TableCell sx={{ width: 150 }}>Homepage</TableCell>
+              {[
+                'ISBN',
+                'Titel',
+                'Art',
+                'Preis',
+                'Rabatt',
+                'Rating',
+                'Lieferbar',
+                'Schlagwörter',
+                'Datum',
+                'Homepage',
+              ].map((h) => (
+                <TableCell key={h} sx={h === 'ISBN' ? { px: 1 } : cell}>
+                  {h}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
-
           <TableBody>
-            {visible.map((book: BuchDTO) => (
-              <TableRow key={book.isbn}>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{book.isbn}</TableCell>
-                <TableCell>{book.titel?.titel}</TableCell>
-                <TableCell>{book.art}</TableCell>
-                <TableCell>{book.preis ?? '-'}</TableCell>
-                <TableCell>{book.rabatt ?? '-'}</TableCell>
-                <TableCell>{book.rating ?? '-'}</TableCell>
-                <TableCell>{book.lieferbar ? 'Ja' : 'Nein'}</TableCell>
-                <TableCell>{book.schlagwoerter?.join(', ') ?? '-'}</TableCell>
-                <TableCell>{formatDate(book.datum)}</TableCell>
-                <TableCell>{book.homepage ?? '-'}</TableCell>
+            {visible.map((b: BuchDTO) => (
+              <TableRow
+                key={b.isbn}
+                sx={{ '& .MuiTableCell-root': { py: 0.5 } }}
+              >
+                <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
+                <TableCell sx={{ ...cell, maxWidth: 150 }}>
+                  <Tooltip title={b.titel?.titel ?? '-'}>
+                    <span>{b.titel?.titel ?? '-'}</span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell sx={cell}>{b.art}</TableCell>
+                <TableCell sx={cell}>{b.preis ?? '-'}</TableCell>
+                <TableCell sx={cell}>{b.rabatt ?? '-'}</TableCell>
+                <TableCell sx={cell}>{b.rating ?? '-'}</TableCell>
+                <TableCell sx={cell}>{b.lieferbar ? 'Ja' : 'Nein'}</TableCell>
+                <TableCell sx={{ ...cell, maxWidth: 120 }}>
+                  <Tooltip title={b.schlagwoerter?.join(', ') ?? '-'}>
+                    <span>{b.schlagwoerter?.join(', ') ?? '-'}</span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell sx={cell}>{formatDate(b.datum)}</TableCell>
+                <TableCell
+                  sx={{
+                    ...cell,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    minWidth: 120,
+                    maxWidth: 180,
+                  }}
+                >
+                  <Tooltip title={b.homepage ?? '-'}>
+                    <Box
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {b.homepage ?? '-'}
+                    </Box>
+                  </Tooltip>
+                  <Tooltip title="Löschen">
+                    <IconButton size="small" color="error">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
           <CircularProgress size={24} />
         </Box>
       )}
-
       {error && (
-        <Typography color="error" sx={{ textAlign: 'center', py: 2 }}>
+        <Typography color="error" sx={{ textAlign: 'center', py: 1 }}>
           {error}
         </Typography>
       )}
