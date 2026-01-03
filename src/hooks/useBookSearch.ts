@@ -246,72 +246,81 @@ export const useBookSearch = (filters: Filters, pageSize: number) => {
     });
   }, []);
 
-  const applyError = useCallback((error: unknown) => {
-    const message = axios.isAxiosError(error)
-      ? `HTTP Error: ${error.response?.status ?? error.message}`
-      : error instanceof Error
-      ? error.message
-      : 'Fehler beim Laden der Bücher';
+const applyError = useCallback((error: unknown) => {
+  const message = axios.isAxiosError(error)
+    ? `HTTP Error: ${error.response?.status ?? error.message}`
+    : error instanceof Error
+    ? error.message
+    : 'Fehler beim Laden der Bücher';
 
-    setState((prev) => ({ ...prev, error: message }));
-  }, []);
+  setState((prev) => ({ ...prev, error: message }));
+}, []);
 
-  const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
-    const activeFilters = filtersRef.current;
+const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
+  const activeFilters = filtersRef.current;
 
-    const raw = extractBooks(data);
-    const filtered = filterBooks(raw, activeFilters);
-    const sorted = sortBooks(filtered, activeFilters.sort);
+  const raw = extractBooks(data);
+  const filtered = filterBooks(raw, activeFilters);
+  const sorted = sortBooks(filtered, activeFilters.sort);
+  const totalPages = extractTotalPages(data);
 
-    setState((prev) => {
-      const merged = mode === 'replace' ? sorted : [...prev.items, ...sorted];
-      return {
-        items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
-        page: pageToLoad,
-        totalPages: extractTotalPages(data),
-        lastBatchSize: sorted.length,
-        loading: prev.loading,
-        loadingMore: prev.loadingMore,
-        error: undefined,
-      };
-    });
-  }, [filtersRef]);
+  setState((prev) => {
+    const merged = mode === 'replace' ? sorted : [...prev.items, ...sorted];
+    return {
+      items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
+      page: pageToLoad,
+      totalPages,
+      lastBatchSize: raw.length,
+      loading: prev.loading,
+      loadingMore: prev.loadingMore,
+      error: undefined,
+    };
+  });
+  return { sortedLength: sorted.length, totalPages };
+}, [filtersRef]);
 
   const fetchPage = useCallback((pageToLoad: number, mode: FetchMode) => {
     const requestId = requestRef.current + 1;
     requestRef.current = requestId;
 
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    const run = (page: number, fetchMode: FetchMode) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    beginFetch(mode);
+      beginFetch(fetchMode);
 
-    const activeQueryParams = queryParamsRef.current;
+      const activeQueryParams = queryParamsRef.current;
 
-    api
-      .get<ApiResponse>('/', {
-        params: { ...activeQueryParams, page: pageToLoad },
-        signal: controller.signal,
-      })
-      .then(({ data }) => {
-        if (requestId !== requestRef.current) return;
-        applySuccess(data, mode, pageToLoad);
-      })
-      .catch((error) => {
-        if (requestId !== requestRef.current) return;
-        if (isCanceledError(error, controller.signal)) return;
+      api
+        .get<ApiResponse>('/', {
+          params: { ...activeQueryParams, page },
+          signal: controller.signal,
+        })
+        .then(({ data }) => {
+          if (requestId !== requestRef.current) return;
+          const { sortedLength, totalPages } = applySuccess(data, fetchMode, page);
+          if (sortedLength === 0 && totalPages > page + 1) {
+            run(page + 1, 'append');
+          }
+        })
+        .catch((error) => {
+          if (requestId !== requestRef.current) return;
+          if (isCanceledError(error, controller.signal)) return;
 
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-          apply404(mode, pageToLoad);
-          return;
-        }
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            apply404(fetchMode, page);
+            return;
+          }
 
-        applyError(error);
-      })
-      .finally(() => {
-        endFetch(requestId);
-      });
+          applyError(error);
+        })
+        .finally(() => {
+          endFetch(requestId);
+        });
+    };
+
+    run(pageToLoad, mode);
   }, [apply404, applyError, applySuccess, beginFetch, endFetch, queryParamsRef]);
 
   useEffect(() => {
