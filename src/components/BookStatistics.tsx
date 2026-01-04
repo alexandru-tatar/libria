@@ -136,14 +136,18 @@ export const BookStatistics: React.FC = () => {
       <Divider sx={{ my: 2 }} />
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>Zuletzt hinzugefügte Bücher</Typography>
       <List dense>
-        {books.slice(0, 5).map((book) => (
-          <ListItem key={book.id} disableGutters>
-            <ListItemText
-              primary={<span style={{ fontWeight: 600 }}>{book.titel?.titel}</span>}
-              secondary={book.datum ? formatDate(book.datum) : ''}
-            />
-          </ListItem>
-        ))}
+        {[...books]
+          .filter(book => !!book.datum)
+          .sort((a, b) => new Date(b.datum!).getTime() - new Date(a.datum!).getTime())
+          .slice(0, 5)
+          .map((book) => (
+            <ListItem key={book.id} disableGutters>
+              <ListItemText
+                primary={<span style={{ fontWeight: 600 }}>{book.titel?.titel}</span>}
+                secondary={book.datum ? formatDate(book.datum) : ''}
+              />
+            </ListItem>
+          ))}
       </List>
     </Box>
   );
