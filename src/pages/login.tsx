@@ -111,6 +111,16 @@ function Login() {
               ),
             }}
           />
+          <Typography variant="body2" sx={{ mt: -1, mb: 1, textAlign: 'right' }}>
+            <a
+              href={`${import.meta.env.VITE_KEYCLOAK_URL}/realms/${import.meta.env.VITE_KEYCLOAK_REALM}/login-actions/reset-credentials`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'underline', color: '#1976d2', cursor: 'pointer' }}
+            >
+              Passwort vergessen?
+            </a>
+          </Typography>
           <Button
             variant="contained"
             size="large"

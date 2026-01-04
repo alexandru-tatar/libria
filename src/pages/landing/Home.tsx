@@ -38,6 +38,12 @@ const featureDeck = [
     tag: 'AUTH',
   },
   {
+    title: 'Password Reset',
+    desc: 'Passwort-Reset über Keycloak-Reset-Seite (Link im Login-Formular).',
+    icon: <AutoAwesomeRoundedIcon />,
+    tag: 'AUTH',
+  },
+  {
     title: 'Suche + Paginierung',
     desc: 'Axios mit Bearer-Token, Tag-Mapping und Auto-Load bei leeren Seiten.',
     icon: <BoltRoundedIcon />,
