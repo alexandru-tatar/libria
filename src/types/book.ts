@@ -2,19 +2,19 @@
 export type Buchart = 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
 
 export interface TitelDTO {
-  id?: string;
+  id?: number;
   titel: string;
   untertitel?: string;
 }
 
 export interface AbbildungDTO {
-  id?: string;
+  id?: number;
   beschriftung: string;
   contentType: string;
 }
 
 export interface BuchDtoOhneRef {
-  id?: string;
+  id?: number;
   isbn: string;
   rating: number;
   art?: Buchart;

@@ -15,6 +15,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect } from 'react';
 import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
+import { useBookDelete } from '../hooks/useBookDelete';
 import type { Filters } from '../hooks/useBookSearch';
 import type { BuchDTO } from '../types/book';
 
@@ -36,10 +37,12 @@ export function BookTable({
   pageSize = 10,
   onCountChange,
 }: BookTableProps) {
-  const { visible, loading, error, loadMore, hasMore } = useBookSearch(
+  const { visible, loading, error, loadMore, hasMore, refetch } = useBookSearch(
     filters,
     pageSize,
   );
+  const { deleteBook, loading: deleting } = useBookDelete();
+
   useEffect(
     () => onCountChange?.(visible.length),
     [visible.length, onCountChange],
@@ -49,8 +52,13 @@ export function BookTable({
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     if (scrollTop + clientHeight >= scrollHeight - 10 && hasMore) loadMore();
   };
+
   const formatDate = (d?: string) =>
     d ? d.split('T')[0].split('-').reverse().join('.') : '-';
+
+  const handleDelete = (id: number) => {
+    deleteBook(id).then(() => refetch());
+  };
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -121,9 +129,16 @@ export function BookTable({
                     </Box>
                   </Tooltip>
                   <Tooltip title="Löschen">
-                    <IconButton size="small" color="error">
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        disabled={deleting}
+                        onClick={() => handleDelete(b.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
                   </Tooltip>
                 </TableCell>
               </TableRow>
@@ -131,11 +146,13 @@ export function BookTable({
           </TableBody>
         </Table>
       </TableContainer>
+
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
           <CircularProgress size={24} />
         </Box>
       )}
+
       {error && (
         <Typography color="error" sx={{ textAlign: 'center', py: 1 }}>
           {error}

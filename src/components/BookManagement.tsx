@@ -39,7 +39,7 @@ export function BookManagement({
     reset();
   };
 
-  const onCreate = async (data: BuchDTO) => {
+    const onCreate = async (data: BuchDTO) => {
     setSubmitting(true);
     try {
       const rawIsbn = data.isbn?.trim();
@@ -64,7 +64,7 @@ export function BookManagement({
         preis: Number(data.preis),
         rabatt: data.rabatt != null ? Number(data.rabatt) : undefined,
         lieferbar: Boolean(data.lieferbar),
-        datum: data.datum || undefined,
+        datum: data.datum ? new Date(`${data.datum}T00:00:00Z`).toISOString() : undefined,
         schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
       };
 
@@ -83,6 +83,7 @@ export function BookManagement({
       setSubmitting(false);
     }
   };
+
 
   return (
     <>
