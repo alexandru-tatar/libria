@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useEffect } from 'react';
 import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
 import { useBookDelete } from '../hooks/useBookDelete';
@@ -43,10 +44,7 @@ export function BookTable({
   );
   const { deleteBook, loading: deleting } = useBookDelete();
 
-  useEffect(
-    () => onCountChange?.(visible.length),
-    [visible.length, onCountChange],
-  );
+  useEffect(() => onCountChange?.(visible.length), [visible.length, onCountChange]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -58,6 +56,10 @@ export function BookTable({
 
   const handleDelete = (id: number) => {
     deleteBook(id).then(() => refetch());
+  };
+
+  const handleEditPlaceholder = (b: BuchDTO) => {
+    console.log('Bearbeiten-Button geklickt für ISBN:', b.isbn);
   };
 
   return (
@@ -86,10 +88,7 @@ export function BookTable({
           </TableHead>
           <TableBody>
             {visible.map((b: BuchDTO) => (
-              <TableRow
-                key={b.isbn}
-                sx={{ '& .MuiTableCell-root': { py: 0.5 } }}
-              >
+              <TableRow key={b.isbn} sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
                 <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
                 <TableCell sx={{ ...cell, maxWidth: 150 }}>
                   <Tooltip title={b.titel?.titel ?? '-'}>
@@ -113,8 +112,8 @@ export function BookTable({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    minWidth: 120,
-                    maxWidth: 180,
+                    minWidth: 150,
+                    maxWidth: 200,
                   }}
                 >
                   <Tooltip title={b.homepage ?? '-'}>
@@ -128,8 +127,21 @@ export function BookTable({
                       {b.homepage ?? '-'}
                     </Box>
                   </Tooltip>
-                  <Tooltip title="Löschen">
-                    <span>
+
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    {/* Bearbeiten-Button als Info (hellblau), placeholder */}
+                    <Tooltip title="Bearbeiten">
+                      <IconButton
+                        size="small"
+                        sx={{ color: 'info.main' }}
+                        onClick={() => handleEditPlaceholder(b)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Löschen-Button */}
+                    <Tooltip title="Löschen">
                       <IconButton
                         size="small"
                         color="error"
@@ -138,8 +150,8 @@ export function BookTable({
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
-                    </span>
-                  </Tooltip>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
