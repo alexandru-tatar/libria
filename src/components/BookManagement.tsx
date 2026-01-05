@@ -24,6 +24,7 @@ import { RabattField } from './FormFields/RabattField';
 import { HomepageField } from './FormFields/HomePageField';
 import { DatumField } from './FormFields/DatumField';
 import { useBookCreate } from '../hooks/useBookCreate';
+import { useBookUpdate } from '../hooks/useBookUpdate';
 
 type BookManagementProps = {
   open: boolean;
@@ -32,16 +33,36 @@ type BookManagementProps = {
 };
 
 export function BookManagement({ open, onClose, initialData }: BookManagementProps) {
+  const isEditMode = Boolean(initialData);
+
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
 
+  // --- Form ---
   const { control, handleSubmit, reset, formState: { errors } } = useForm<BuchDTO>({
     defaultValues: initialData ?? { titel: { titel: '', untertitel: '' } },
   });
 
-  const { createBook, submitting, successMsg, errorMsg } = useBookCreate();
+  // --- Hooks ---
+  const {
+    createBook,
+    submitting: creating,
+    successMsg: createSuccess,
+    errorMsg: createError,
+  } = useBookCreate();
 
-  // Form reset, wenn initialData sich ändert oder Dialog geöffnet wird
+  const {
+    updateBook,
+    submitting: updating,
+    successMsg: updateSuccess,
+    errorMsg: updateError,
+  } = useBookUpdate();
+
+  const submitting = isEditMode ? updating : creating;
+  const successMsg = isEditMode ? updateSuccess : createSuccess;
+  const errorMsg = isEditMode ? updateError : createError;
+
+  // --- Reset Form bei Änderung von initialData oder open ---
   useEffect(() => {
     reset(initialData ?? { titel: { titel: '', untertitel: '' } });
   }, [initialData, reset, open]);
@@ -51,8 +72,8 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
     reset(initialData ?? { titel: { titel: '', untertitel: '' } });
   };
 
+  // --- Submit Handler ---
   const onSubmit = async (data: BuchDTO) => {
-    // payload vorbereiten wie bisher
     const payload: BuchDTO = {
       ...data,
       rating: Number(data.rating),
@@ -63,8 +84,15 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
       schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
     };
 
-    // --- API call nur beim Anlegen (Bearbeiten kann später ergänzt werden) ---
-    const success = await createBook(payload);
+    let success = false;
+
+    if (isEditMode && initialData?.id != null) {
+      // Bearbeiten
+      success = await updateBook(initialData.id.toString(), payload);
+    } else {
+      // Anlegen
+      success = await createBook(payload);
+    }
 
     if (success) {
       setSuccessDialogOpen(true);
@@ -73,8 +101,6 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
       setErrorDialogOpen(true);
     }
   };
-
-  const isEditMode = Boolean(initialData); // Titel & Button Text anpassen
 
   return (
     <>
