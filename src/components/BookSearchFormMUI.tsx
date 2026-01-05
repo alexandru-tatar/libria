@@ -40,6 +40,7 @@ import {
 import './SearchForm.css';
 import type { BookItems } from '../types/book';
 import { BookDetail } from './BookDetail';
+import { EntryCount } from './EntryCount';
 
 const quickTags = [
   'JavaScript',
@@ -68,7 +69,10 @@ export const BookSearchFormMUI = () => {
     loadMore,
     refetch,
     isEmpty,
+    totalItems,
   } = useBookSearch(filters, pageSize);
+  const totalCount = totalItems ?? visible.length;
+  const pageCount = visible.length;
 
   const handleSearch = useCallback(() => refetch(), [refetch]);
   const handleReset = useCallback(() => resetFilters(), [resetFilters]);
@@ -453,9 +457,10 @@ export const BookSearchFormMUI = () => {
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               {loadingMore && <CircularProgress size={18} />}
-              <Typography variant="body2" color="text.secondary">
-                {visible.length} angezeigt
-              </Typography>
+              <EntryCount
+                count={totalItems ?? visible.length}
+                label="Bücher"
+              />
             </Stack>
           </Stack>
 
@@ -473,13 +478,20 @@ export const BookSearchFormMUI = () => {
             ))}
           </div>
 
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <Stack
+            spacing={0.75}
+            alignItems="center"
+            sx={{ py: 1 }}
+          >
             <LoadMoreBar
               loading={loadingMore}
               hasMore={hasMore}
               onLoadMore={handleLoadMore}
             />
-          </Box>
+            <Typography variant="caption" color="text.secondary">
+              {pageCount} von {totalCount} Büchern
+            </Typography>
+          </Stack>
         </Stack>
       )}
 
