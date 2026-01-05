@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Dialog,
@@ -25,53 +25,36 @@ import { HomepageField } from './FormFields/HomePageField';
 import { DatumField } from './FormFields/DatumField';
 import { useBookCreate } from '../hooks/useBookCreate';
 
-export function BookManagement({
-  open,
-  onClose,
-}: {
+type BookManagementProps = {
   open: boolean;
   onClose: () => void;
-}) {
+  initialData?: BuchDTO; // optional für Bearbeiten
+};
+
+export function BookManagement({ open, onClose, initialData }: BookManagementProps) {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<BuchDTO>({
-    defaultValues: { titel: { titel: '', untertitel: '' } },
+    defaultValues: initialData ?? { titel: { titel: '', untertitel: '' } },
   });
 
   const { createBook, submitting, successMsg, errorMsg } = useBookCreate();
 
+  // Form reset, wenn initialData sich ändert oder Dialog geöffnet wird
+  useEffect(() => {
+    reset(initialData ?? { titel: { titel: '', untertitel: '' } });
+  }, [initialData, reset, open]);
+
   const closeDialog = () => {
     onClose();
-    reset();
+    reset(initialData ?? { titel: { titel: '', untertitel: '' } });
   };
 
-  const onCreate = async (data: BuchDTO) => {
-    // --- VALIDIERUNG & PAYLOAD AUFBEREITUNG ---
-    const rawIsbn = data.isbn?.trim();
-    const isbnDigits = rawIsbn?.replace(/[-\s]/g, '') ?? '';
-    if (!isbnDigits || isbnDigits.length !== 13) {
-      setErrorDialogOpen(true);
-      return;
-    }
-
-    const valid =
-      (10 -
-        (isbnDigits
-          .slice(0, 12)
-          .split('')
-          .reduce((s, d, i) => s + +d * (i % 2 ? 3 : 1), 0) %
-          10)) %
-        10 ===
-      +isbnDigits[12];
-    if (!valid) {
-      setErrorDialogOpen(true);
-      return;
-    }
-
+  const onSubmit = async (data: BuchDTO) => {
+    // payload vorbereiten wie bisher
     const payload: BuchDTO = {
       ...data,
-      isbn: isbnDigits,
       rating: Number(data.rating),
       preis: Number(data.preis),
       rabatt: data.rabatt != null ? Number(data.rabatt) : undefined,
@@ -80,7 +63,7 @@ export function BookManagement({
       schlagwoerter: data.schlagwoerter?.filter(Boolean) ?? [],
     };
 
-    // --- API-CALL ÜBER HOOK ---
+    // --- API call nur beim Anlegen (Bearbeiten kann später ergänzt werden) ---
     const success = await createBook(payload);
 
     if (success) {
@@ -91,15 +74,17 @@ export function BookManagement({
     }
   };
 
+  const isEditMode = Boolean(initialData); // Titel & Button Text anpassen
+
   return (
     <>
       <Dialog open={open} onClose={closeDialog} fullWidth maxWidth="md">
-        <DialogTitle>Buch anlegen</DialogTitle>
+        <DialogTitle>{isEditMode ? 'Buch bearbeiten' : 'Buch anlegen'}</DialogTitle>
         <DialogContent>
           <Box
             component="form"
             id="book-form"
-            onSubmit={handleSubmit(onCreate)}
+            onSubmit={handleSubmit(onSubmit)}
             sx={{ mt: 1, '& .MuiFormControl-root': { mb: 2 } }}
           >
             <IsbnField<BuchDTO> name="isbn" control={control} errors={errors} />
@@ -118,7 +103,7 @@ export function BookManagement({
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={closeDialog} disabled={submitting}>Abbrechen</Button>
           <Button form="book-form" type="submit" variant="contained" disabled={submitting}>
-            {submitting ? 'Bitte warten...' : 'Anlegen'}
+            {submitting ? 'Bitte warten...' : isEditMode ? 'Ändern' : 'Anlegen'}
           </Button>
         </DialogActions>
       </Dialog>
