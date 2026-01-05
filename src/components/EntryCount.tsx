@@ -13,7 +13,10 @@ export function EntryCount({
   label = 'Einträge',
 }: EntryCountProps) {
   return (
-    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+    <Typography
+      variant="subtitle1"
+      fontWeight={700}
+    >
       {count} {label}
       {total !== undefined ? ` von ${total}` : ''} gefunden
     </Typography>
