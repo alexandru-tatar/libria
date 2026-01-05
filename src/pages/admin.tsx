@@ -108,7 +108,6 @@ export function AdminPage() {
       </Paper>
 
       <BookManagement
-        canEditBooks={true}
         open={createOpen}
         onClose={() => setCreateOpen(false)}
       />
