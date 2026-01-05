@@ -8,7 +8,9 @@ import {
   Stack,
   Chip,
   Divider,
+  useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import type { BookItems } from '../types/book';
 
 export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
@@ -24,6 +26,18 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
     lieferbar,
   } = book;
 
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const cardShadow = isDark
+    ? '0 18px 50px rgba(0,0,0,0.45)'
+    : '0 12px 40px rgba(15,23,42,0.12)';
+  const hoverShadow = isDark
+    ? '0 22px 58px rgba(0,0,0,0.55)'
+    : '0 14px 44px rgba(15,23,42,0.16)';
+  const mediaBg = alpha(theme.palette.primary.main, isDark ? 0.1 : 0.05);
+  const subtitleColor = theme.palette.text.secondary;
+  const dividerColor = alpha(theme.palette.divider, isDark ? 0.7 : 1);
+
   const coverImage = abbildungen?.[0];
   const coverUrl = coverImage
     ? `data:${coverImage.contentType};base64,...`
@@ -36,25 +50,40 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
       variant="outlined"
       className="book-card"
       sx={{
+        position: 'relative',
         height: '100%',
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: { xs: 'column', sm: 'row' },
         borderRadius: 3,
         overflow: 'hidden',
-        background: '#ffffff',
-        color: '#0f172a',
-        boxShadow: '0 12px 40px rgba(15,23,42,0.12)',
-        border: '1px solid rgba(15,23,42,0.05)',
+        backgroundColor: alpha(
+          theme.palette.background.paper,
+          isDark ? 0.96 : 1,
+        ),
+        color: theme.palette.text.primary,
+        boxShadow: cardShadow,
+        border: `1px solid ${alpha(
+          theme.palette.divider,
+          isDark ? 0.6 : 0.9,
+        )}`,
         width: '100%',
         maxWidth: '100%',
+        transition: 'transform 150ms ease, box-shadow 150ms ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: hoverShadow,
+        },
       }}
     >
       <Box
         sx={{
           position: 'relative',
-          bgcolor: '#f7f8fb',
-          width: 260,
+          bgcolor: mediaBg,
+          width: { xs: '100%', sm: 260 },
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'stretch',
+          justifyContent: 'center',
         }}
       >
         {coverUrl ? (
@@ -75,15 +104,24 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               width: '100%',
               height: '100%',
               minHeight: 220,
-              background:
-                'radial-gradient(circle at 20% 20%, rgba(15,23,42,0.08), transparent 35%), radial-gradient(circle at 80% 10%, rgba(37,99,235,0.08), transparent 32%), radial-gradient(circle at 50% 80%, rgba(16,185,129,0.1), transparent 30%)',
+              background: `radial-gradient(circle at 20% 20%, ${alpha(
+                theme.palette.primary.main,
+                isDark ? 0.16 : 0.12,
+              )}, transparent 35%), radial-gradient(circle at 80% 10%, ${alpha(
+                theme.palette.info.main,
+                isDark ? 0.16 : 0.12,
+              )}, transparent 32%), radial-gradient(circle at 50% 80%, ${alpha(
+                theme.palette.success.main,
+                isDark ? 0.22 : 0.12,
+              )}, transparent 30%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               textTransform: 'uppercase',
               letterSpacing: 1,
-              color: '#94a3b8',
+              color: subtitleColor,
               fontWeight: 600,
+              textAlign: 'center',
             }}
           >
             Keine Abbildung
@@ -104,7 +142,14 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
             <Chip
               label={`★ ${ratingLabel}`}
               size="small"
-              sx={{ bgcolor: '#0f172a', color: '#fbbf24', fontWeight: 700 }}
+              sx={{
+                bgcolor: alpha(
+                  theme.palette.warning.main,
+                  isDark ? 0.22 : 0.14,
+                ),
+                color: theme.palette.warning.main,
+                fontWeight: 700,
+              }}
             />
           )}
           {art && (
@@ -112,8 +157,13 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={art}
               size="small"
               sx={{
-                bgcolor: 'rgba(15,23,42,0.75)',
-                color: '#e2e8f0',
+                bgcolor: alpha(
+                  theme.palette.primary.main,
+                  isDark ? 0.24 : 0.14,
+                ),
+                color: isDark
+                  ? theme.palette.primary.light
+                  : theme.palette.primary.dark,
                 fontWeight: 600,
               }}
             />
@@ -129,11 +179,13 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               px: 1.75,
               py: 0.65,
               borderRadius: 999,
-              background: 'linear-gradient(120deg, #1976d2, #1565c0)',
-              color: '#eaf3ff',
+              background: `linear-gradient(120deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              color: theme.palette.getContrastText(theme.palette.primary.main),
               fontWeight: 800,
               letterSpacing: 0.2,
-              boxShadow: '0 12px 30px rgba(21,101,192,0.25)',
+              boxShadow: isDark
+                ? '0 12px 30px rgba(0,0,0,0.35)'
+                : '0 12px 30px rgba(21,101,192,0.25)',
             }}
           >
             {priceLabel}
@@ -163,7 +215,7 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
           {titel.untertitel && (
             <Typography
               variant="body2"
-              sx={{ color: '#64748b', lineHeight: 1.5 }}
+              sx={{ color: subtitleColor, lineHeight: 1.5 }}
             >
               {titel.untertitel}
             </Typography>
@@ -176,8 +228,11 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={`ISBN ${isbn}`}
               size="small"
               sx={{
-                bgcolor: 'rgba(15,23,42,0.06)',
-                color: '#0f172a',
+                bgcolor: alpha(
+                  theme.palette.text.primary,
+                  isDark ? 0.2 : 0.06,
+                ),
+                color: theme.palette.text.primary,
                 fontWeight: 600,
               }}
             />
@@ -187,8 +242,13 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={new Date(datum).toLocaleDateString()}
               size="small"
               sx={{
-                bgcolor: 'rgba(37,99,235,0.08)',
-                color: '#0f172a',
+                bgcolor: alpha(
+                  theme.palette.info.main,
+                  isDark ? 0.2 : 0.12,
+                ),
+                color: isDark
+                  ? theme.palette.info.light
+                  : theme.palette.info.dark,
                 fontWeight: 600,
               }}
             />
@@ -198,10 +258,19 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={lieferbar ? 'Lieferbar' : 'Nicht lieferbar'}
               size="small"
               sx={{
-                bgcolor: lieferbar
-                  ? 'rgba(16,185,129,0.15)'
-                  : 'rgba(239,68,68,0.15)',
-                color: lieferbar ? '#065f46' : '#991b1b',
+                bgcolor: alpha(
+                  lieferbar
+                    ? theme.palette.success.main
+                    : theme.palette.error.main,
+                  isDark ? 0.18 : 0.14,
+                ),
+                color: lieferbar
+                  ? isDark
+                    ? theme.palette.success.light
+                    : theme.palette.success.dark
+                  : isDark
+                    ? theme.palette.error.light
+                    : theme.palette.error.dark,
                 fontWeight: 700,
               }}
             />
@@ -216,8 +285,11 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
                 label={tag}
                 size="small"
                 sx={{
-                  bgcolor: 'rgba(15,23,42,0.05)',
-                  color: '#0f172a',
+                  bgcolor: alpha(
+                    theme.palette.text.primary,
+                    isDark ? 0.18 : 0.08,
+                  ),
+                  color: theme.palette.text.primary,
                   fontWeight: 600,
                 }}
               />
@@ -225,13 +297,13 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
           </Stack>
         ) : null}
 
-        <Divider sx={{ borderColor: 'rgba(15,23,42,0.07)' }} />
+        <Divider sx={{ borderColor: dividerColor }} />
 
         <Stack
           direction="row"
           spacing={1.25}
           alignItems="center"
-          sx={{ mt: 'auto', color: '#475569' }}
+          sx={{ mt: 'auto', color: subtitleColor }}
         >
           {ratingLabel && (
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
