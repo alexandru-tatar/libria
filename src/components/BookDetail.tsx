@@ -20,6 +20,8 @@ export const BookDetail = ({
   const imageUrl = book.abbildungen?.[0]
     ? `/api/books/${book.id}/image/${book.abbildungen[0].id}`
     : null;
+  const subtitle = book.titel?.untertitel?.trim();
+  const hasSubtitle = !!subtitle && subtitle.toLowerCase() !== 'null';
 
   return (
     <Box
@@ -107,9 +109,11 @@ export const BookDetail = ({
             <Typography variant="h5" fontWeight={700}>
               {book.titel?.titel ?? 'Kein Titel'}
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              {book.titel?.untertitel}
-            </Typography>
+            {hasSubtitle && (
+              <Typography variant="subtitle1" color="text.secondary">
+                {subtitle}
+              </Typography>
+            )}
           </Box>
         </Box>
 
