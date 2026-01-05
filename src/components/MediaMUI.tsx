@@ -44,6 +44,8 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
     : undefined;
   const priceLabel = preis !== undefined ? `€${Number(preis).toFixed(2)}` : '';
   const ratingLabel = rating !== undefined ? `${rating}/5` : undefined;
+  const subtitle = titel.untertitel?.trim();
+  const hasSubtitle = !!subtitle && subtitle.toLowerCase() !== 'null';
 
   return (
     <Card
@@ -212,12 +214,12 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
           >
             {titel.titel}
           </Typography>
-          {titel.untertitel && (
+          {hasSubtitle && (
             <Typography
               variant="body2"
               sx={{ color: subtitleColor, lineHeight: 1.5 }}
             >
-              {titel.untertitel}
+              {subtitle}
             </Typography>
           )}
         </Stack>

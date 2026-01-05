@@ -89,6 +89,20 @@ const useLatestRef = <T,>(value: T) => {
 
 const normalizeIsbn = (value: string) => value.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 const parseNumber = (value: string) => (value.trim() ? Number(value) : undefined);
+const normalizeSubtitle = (value?: string | null): string | undefined => {
+  if (value == null) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.toLowerCase() === 'null') return undefined;
+  return trimmed;
+};
+
+const normalizeBook = (book: BuchDTO): BuchDTO => {
+  const normalizedTitle = book.titel
+    ? { ...book.titel, untertitel: normalizeSubtitle(book.titel.untertitel) }
+    : book.titel;
+  return { ...book, titel: normalizedTitle };
+};
 
 const isCanceledError = (error: unknown, signal: AbortSignal) =>
   signal.aborted ||
@@ -282,7 +296,7 @@ const applyError = useCallback((error: unknown) => {
   const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
     const activeFilters = filtersRef.current;
 
-    const raw = extractBooks(data);
+    const raw = extractBooks(data).map(normalizeBook);
     const filtered = filterBooks(raw, activeFilters);
     const sorted = sortBooks(filtered, activeFilters.sort);
     const totalPages = extractTotalPages(data);
