@@ -11,7 +11,6 @@ const DashboardPage = lazy(() => import('../pages/dashboard'));
 const ProfilePage = lazy(() => import('../pages/profile'));
 const AdminPage = lazy(() => import('../pages/admin'));
 
-
 const router = createBrowserRouter([
   {
     path: '/',
