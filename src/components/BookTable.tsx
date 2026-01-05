@@ -13,11 +13,13 @@ import {
   Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useEffect } from 'react';
+import EditIcon from '@mui/icons-material/Edit';
+import { useEffect, useState } from 'react';
 import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
 import { useBookDelete } from '../hooks/useBookDelete';
 import type { Filters } from '../hooks/useBookSearch';
 import type { BuchDTO } from '../types/book';
+import { BookManagement } from './BookManagement';
 
 type BookTableProps = {
   filters?: Filters;
@@ -43,10 +45,10 @@ export function BookTable({
   );
   const { deleteBook, loading: deleting } = useBookDelete();
 
-  useEffect(
-    () => onCountChange?.(visible.length),
-    [visible.length, onCountChange],
-  );
+  const [editingBook, setEditingBook] = useState<BuchDTO | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => onCountChange?.(visible.length), [visible.length, onCountChange]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -60,105 +62,136 @@ export function BookTable({
     deleteBook(id).then(() => refetch());
   };
 
+  const handleEditClick = (b: BuchDTO) => {
+    setEditingBook(b);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setEditingBook(null);
+  };
+
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: 400 }} onScroll={handleScroll}>
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              {[
-                'ISBN',
-                'Titel',
-                'Art',
-                'Preis',
-                'Rabatt',
-                'Rating',
-                'Lieferbar',
-                'Schlagwörter',
-                'Datum',
-                'Homepage',
-              ].map((h) => (
-                <TableCell key={h} sx={h === 'ISBN' ? { px: 1 } : cell}>
-                  {h}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {visible.map((b: BuchDTO) => (
-              <TableRow
-                key={b.isbn}
-                sx={{ '& .MuiTableCell-root': { py: 0.5 } }}
-              >
-                <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
-                <TableCell sx={{ ...cell, maxWidth: 150 }}>
-                  <Tooltip title={b.titel?.titel ?? '-'}>
-                    <span>{b.titel?.titel ?? '-'}</span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell sx={cell}>{b.art}</TableCell>
-                <TableCell sx={cell}>{b.preis ?? '-'}</TableCell>
-                <TableCell sx={cell}>{b.rabatt ?? '-'}</TableCell>
-                <TableCell sx={cell}>{b.rating ?? '-'}</TableCell>
-                <TableCell sx={cell}>{b.lieferbar ? 'Ja' : 'Nein'}</TableCell>
-                <TableCell sx={{ ...cell, maxWidth: 120 }}>
-                  <Tooltip title={b.schlagwoerter?.join(', ') ?? '-'}>
-                    <span>{b.schlagwoerter?.join(', ') ?? '-'}</span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell sx={cell}>{formatDate(b.datum)}</TableCell>
-                <TableCell
-                  sx={{
-                    ...cell,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    minWidth: 120,
-                    maxWidth: 180,
-                  }}
-                >
-                  <Tooltip title={b.homepage ?? '-'}>
-                    <Box
-                      sx={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {b.homepage ?? '-'}
-                    </Box>
-                  </Tooltip>
-                  <Tooltip title="Löschen">
-                    <span>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        disabled={deleting}
-                        onClick={() => handleDelete(b.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </TableCell>
+    <>
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <TableContainer sx={{ maxHeight: 400 }} onScroll={handleScroll}>
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                {[
+                  'ISBN',
+                  'Titel',
+                  'Art',
+                  'Preis',
+                  'Rabatt',
+                  'Rating',
+                  'Lieferbar',
+                  'Schlagwörter',
+                  'Datum',
+                  'Homepage',
+                ].map((h) => (
+                  <TableCell key={h} sx={h === 'ISBN' ? { px: 1 } : cell}>
+                    {h}
+                  </TableCell>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {visible.map((b: BuchDTO) => (
+                <TableRow key={b.isbn} sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
+                  <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
+                  <TableCell sx={{ ...cell, maxWidth: 150 }}>
+                    <Tooltip title={b.titel?.titel ?? '-'}>
+                      <span>{b.titel?.titel ?? '-'}</span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell sx={cell}>{b.art}</TableCell>
+                  <TableCell sx={cell}>{b.preis ?? '-'}</TableCell>
+                  <TableCell sx={cell}>{b.rabatt ?? '-'}</TableCell>
+                  <TableCell sx={cell}>{b.rating ?? '-'}</TableCell>
+                  <TableCell sx={cell}>{b.lieferbar ? 'Ja' : 'Nein'}</TableCell>
+                  <TableCell sx={{ ...cell, maxWidth: 120 }}>
+                    <Tooltip title={b.schlagwoerter?.join(', ') ?? '-'}>
+                      <span>{b.schlagwoerter?.join(', ') ?? '-'}</span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell sx={cell}>{formatDate(b.datum)}</TableCell>
+                  <TableCell
+                    sx={{
+                      ...cell,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      minWidth: 150,
+                      maxWidth: 200,
+                    }}
+                  >
+                    <Tooltip title={b.homepage ?? '-'}>
+                      <Box
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {b.homepage ?? '-'}
+                      </Box>
+                    </Tooltip>
 
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-          <CircularProgress size={24} />
-        </Box>
-      )}
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      {/* Bearbeiten-Button */}
+                      <Tooltip title="Bearbeiten">
+                        <IconButton
+                          size="small"
+                          sx={{ color: 'info.main' }}
+                          onClick={() => handleEditClick(b)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
 
-      {error && (
-        <Typography color="error" sx={{ textAlign: 'center', py: 1 }}>
-          {error}
-        </Typography>
+                      {/* Löschen-Button */}
+                      <Tooltip title="Löschen">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={deleting}
+                          onClick={() => handleDelete(b.id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+            <CircularProgress size={24} />
+          </Box>
+        )}
+
+        {error && (
+          <Typography color="error" sx={{ textAlign: 'center', py: 1 }}>
+            {error}
+          </Typography>
+        )}
+      </Paper>
+
+      {/* BookManagement-Dialog zum Bearbeiten */}
+      {editingBook && (
+        <BookManagement
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          initialData={editingBook} // vorausgefüllte Werte
+        />
       )}
-    </Paper>
+    </>
   );
 }
 
