@@ -11,8 +11,6 @@ import {
   Divider,
   type SxProps,
   type Theme,
-  type BoxProps,
-  type PaperProps,
 } from '@mui/material';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -27,28 +25,11 @@ import ScienceRoundedIcon from '@mui/icons-material/ScienceRounded';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 
-import {
-  motion,
-  type MotionProps,
-  useInView,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from 'framer-motion';
+import { motion, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import type { ComponentType } from 'react';
 
-type MotionBoxProps = BoxProps & MotionProps;
-const MotionBox = React.forwardRef<HTMLDivElement, MotionBoxProps>(({ children, ...rest }, ref) => (
-  <Box component={motion.div} ref={ref} {...rest}>
-    {children}
-  </Box>
-));
-
-type MotionPaperProps = PaperProps & MotionProps;
-const MotionPaper = React.forwardRef<HTMLDivElement, MotionPaperProps>(({ children, ...rest }, ref) => (
-  <Paper component={motion.div} ref={ref} {...rest}>
-    {children}
-  </Paper>
-));
+const MotionBox = motion(Box as ComponentType<any>);
+const MotionPaper = motion(Paper as ComponentType<any>);
 
 const featureDeck = [
   {
@@ -162,15 +143,17 @@ function TiltCard({
     <MotionBox
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      style={{ perspective: 900 }}
+      style={{ perspective: 900 } as any}
       sx={sx}
     >
       <MotionBox
-        style={{
-          rotateX: rx,
-          rotateY: ry,
-          transformStyle: 'preserve-3d',
-        }}
+        style={
+          {
+            rotateX: rx,
+            rotateY: ry,
+            transformStyle: 'preserve-3d',
+          } as any
+        }
       >
         {children}
       </MotionBox>
