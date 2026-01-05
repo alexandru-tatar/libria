@@ -11,6 +11,8 @@ import {
   Divider,
   type SxProps,
   type Theme,
+  type BoxProps,
+  type PaperProps,
 } from '@mui/material';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -25,10 +27,28 @@ import ScienceRoundedIcon from '@mui/icons-material/ScienceRounded';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 
-import { motion, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import {
+  motion,
+  type MotionProps,
+  useInView,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 
-const MotionBox = motion(Box);
-const MotionPaper = motion(Paper);
+type MotionBoxProps = BoxProps & MotionProps;
+const MotionBox = React.forwardRef<HTMLDivElement, MotionBoxProps>(({ children, ...rest }, ref) => (
+  <Box component={motion.div} ref={ref} {...rest}>
+    {children}
+  </Box>
+));
+
+type MotionPaperProps = PaperProps & MotionProps;
+const MotionPaper = React.forwardRef<HTMLDivElement, MotionPaperProps>(({ children, ...rest }, ref) => (
+  <Paper component={motion.div} ref={ref} {...rest}>
+    {children}
+  </Paper>
+));
 
 const featureDeck = [
   {
