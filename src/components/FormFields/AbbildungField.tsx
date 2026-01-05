@@ -26,7 +26,6 @@ export function AbbildungField<T extends FieldValues>(
         label="Abbildung Content-Type"
         name={`${props.name}.0.contentType` as Path<T>}
         rules={{
-          required: 'Content-Type ist erforderlich',
           maxLength: { value: 16, message: 'Maximal 16 Zeichen' },
         }}
       />

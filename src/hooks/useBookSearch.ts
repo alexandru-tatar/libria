@@ -25,8 +25,9 @@ export type Filters = {
 type ApiResponse = {
   _embedded?: { buecher?: BuchDTO[] };
   content?: BuchDTO[];
-  page?: { totalPages?: number };
+  page?: { totalPages?: number; totalElements?: number };
   totalPages?: number;
+  totalElements?: number;
 };
 
 type FetchMode = 'replace' | 'append';
@@ -35,6 +36,7 @@ type SearchState = {
   items: BuchDTO[];
   page: number;
   totalPages: number;
+  totalItems?: number;
   lastBatchSize?: number;
   loading: boolean;
   loadingMore: boolean;
@@ -45,6 +47,7 @@ const initialState: SearchState = {
   items: [],
   page: 0,
   totalPages: 0,
+  totalItems: undefined,
   lastBatchSize: undefined,
   loading: false,
   loadingMore: false,
@@ -64,6 +67,18 @@ export const defaultFilters = {
   sort: 'titel,asc',
 } satisfies Filters;
 
+const isDefaultFilters = (filters: Filters) =>
+  filters.titel === '' &&
+  filters.isbn === '' &&
+  filters.art === '' &&
+  filters.lieferbar === false &&
+  filters.preisVon === '' &&
+  filters.preisBis === '' &&
+  filters.rabattAb === '' &&
+  filters.ratingMin === 0 &&
+  filters.schlagwoerter.length === 0 &&
+  filters.sort === defaultFilters.sort;
+
 const useLatestRef = <T,>(value: T) => {
   const ref = useRef(value);
   useEffect(() => {
@@ -74,6 +89,20 @@ const useLatestRef = <T,>(value: T) => {
 
 const normalizeIsbn = (value: string) => value.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 const parseNumber = (value: string) => (value.trim() ? Number(value) : undefined);
+const normalizeSubtitle = (value?: string | null): string | undefined => {
+  if (value == null) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.toLowerCase() === 'null') return undefined;
+  return trimmed;
+};
+
+const normalizeBook = (book: BuchDTO): BuchDTO => {
+  const normalizedTitle = book.titel
+    ? { ...book.titel, untertitel: normalizeSubtitle(book.titel.untertitel) }
+    : book.titel;
+  return { ...book, titel: normalizedTitle };
+};
 
 const isCanceledError = (error: unknown, signal: AbortSignal) =>
   signal.aborted ||
@@ -241,7 +270,15 @@ export const useBookSearch = (filters: Filters, pageSize: number) => {
 
   const apply404 = useCallback((mode: FetchMode, pageToLoad: number) => {
     setState((prev) => {
-      if (mode === 'replace') return { ...initialState, page: pageToLoad, totalPages: 0, lastBatchSize: 0, error: undefined };
+      if (mode === 'replace')
+        return {
+          ...initialState,
+          page: pageToLoad,
+          totalPages: 0,
+          totalItems: 0,
+          lastBatchSize: 0,
+          error: undefined,
+        };
       return { ...prev, totalPages: prev.page + 1, lastBatchSize: 0, error: undefined };
     });
   }, []);
@@ -256,28 +293,32 @@ const applyError = useCallback((error: unknown) => {
   setState((prev) => ({ ...prev, error: message }));
 }, []);
 
-const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
-  const activeFilters = filtersRef.current;
+  const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
+    const activeFilters = filtersRef.current;
 
-  const raw = extractBooks(data);
-  const filtered = filterBooks(raw, activeFilters);
-  const sorted = sortBooks(filtered, activeFilters.sort);
-  const totalPages = extractTotalPages(data);
+    const raw = extractBooks(data).map(normalizeBook);
+    const filtered = filterBooks(raw, activeFilters);
+    const sorted = sortBooks(filtered, activeFilters.sort);
+    const totalPages = extractTotalPages(data);
+    const reportedTotal = isDefaultFilters(activeFilters) ? data.page?.totalElements ?? data.totalElements : undefined;
 
-  setState((prev) => {
-    const merged = mode === 'replace' ? sorted : [...prev.items, ...sorted];
-    return {
-      items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
-      page: pageToLoad,
-      totalPages,
-      lastBatchSize: raw.length,
-      loading: prev.loading,
-      loadingMore: prev.loadingMore,
-      error: undefined,
-    };
-  });
-  return { sortedLength: sorted.length, totalPages };
-}, [filtersRef]);
+    setState((prev) => {
+      const merged = mode === 'replace' ? sorted : [...prev.items, ...sorted];
+      const mergedSorted = sortBooks(dedupeByIsbn(merged), activeFilters.sort);
+      const totalItems = reportedTotal ?? mergedSorted.length;
+      return {
+        items: mergedSorted,
+        page: pageToLoad,
+        totalPages,
+        totalItems,
+        lastBatchSize: raw.length,
+        loading: prev.loading,
+        loadingMore: prev.loadingMore,
+        error: undefined,
+      };
+    });
+    return { sortedLength: sorted.length, totalPages };
+  }, [filtersRef]);
 
   const fetchPage = useCallback((pageToLoad: number, mode: FetchMode) => {
     const requestId = requestRef.current + 1;
