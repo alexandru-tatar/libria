@@ -203,219 +203,121 @@ const buildQueryParams = (filters: Filters, pageSize: number) => {
     return params;
 };
 
-export const useBookFilters = (initialFilters: Filters = defaultFilters) => {
-    const [filters, setFilters] = useState<Filters>(initialFilters);
+  const apply404 = useCallback((mode: FetchMode, pageToLoad: number) => {
+    setState((prev) => {
+      if (mode === 'replace') return { ...initialState, page: pageToLoad, totalPages: 0, lastBatchSize: 0, error: undefined };
+      return { ...prev, totalPages: prev.page + 1, lastBatchSize: 0, error: undefined };
+    });
+  }, []);
 
-    const setFilterValue = useCallback(
-        <K extends keyof Filters>(key: K, value: Filters[K]) => {
-            setFilters((prev) => ({ ...prev, [key]: value }));
-        },
-        [],
-    );
+const applyError = useCallback((error: unknown) => {
+  const message = axios.isAxiosError(error)
+    ? `HTTP Error: ${error.response?.status ?? error.message}`
+    : error instanceof Error
+    ? error.message
+    : 'Fehler beim Laden der Bücher';
 
-    const toggleTag = useCallback((tag: string) => {
-        setFilters((prev) => {
-            const exists = prev.schlagwoerter.includes(tag);
-            const schlagwoerter = exists
-                ? prev.schlagwoerter.filter((x) => x !== tag)
-                : [...prev.schlagwoerter, tag];
-            return { ...prev, schlagwoerter };
-        });
-    }, []);
+  setState((prev) => ({ ...prev, error: message }));
+}, []);
 
-    const resetFilters = useCallback(() => setFilters(defaultFilters), []);
+const applySuccess = useCallback((data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
+  const activeFilters = filtersRef.current;
 
-    return { filters, setFilterValue, toggleTag, resetFilters };
-};
+  const raw = extractBooks(data);
+  const filtered = filterBooks(raw, activeFilters);
+  const sorted = sortBooks(filtered, activeFilters.sort);
+  const totalPages = extractTotalPages(data);
+
+  setState((prev) => {
+    const merged = mode === 'replace' ? sorted : [...prev.items, ...sorted];
+    return {
+      items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
+      page: pageToLoad,
+      totalPages,
+      lastBatchSize: raw.length,
+      loading: prev.loading,
+      loadingMore: prev.loadingMore,
+      error: undefined,
+    };
+  });
+  return { sortedLength: sorted.length, totalPages };
+}, [filtersRef]);
 
 export const useBookSearch = (filters: Filters, pageSize: number) => {
     const [state, setState] = useState<SearchState>(initialState);
 
-    const requestRef = useRef(0);
-    const abortRef = useRef<AbortController | undefined>(undefined);
+    const run = (page: number, fetchMode: FetchMode) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    // React 18 - https://react.dev/reference/react/useDeferredValue
-    const deferredFilters = useDeferredValue(filters);
-    const filtersRef = useLatestRef(deferredFilters);
+      beginFetch(fetchMode);
 
-    const queryParams = useMemo(
-        () => buildQueryParams(deferredFilters, pageSize),
-        [deferredFilters, pageSize],
-    );
-    const queryParamsRef = useLatestRef(queryParams);
+      const activeQueryParams = queryParamsRef.current;
 
-    // React 18 - https://react.dev/reference/react/useTransition
-    const [isPending, startTransition] = useTransition();
+      api
+        .get<ApiResponse>('/', {
+          params: { ...activeQueryParams, page },
+          signal: controller.signal,
+        })
+        .then(({ data }) => {
+          if (requestId !== requestRef.current) return;
+          const { sortedLength, totalPages } = applySuccess(data, fetchMode, page);
+          if (sortedLength === 0 && totalPages > page + 1) {
+            run(page + 1, 'append');
+          }
+        })
+        .catch((error) => {
+          if (requestId !== requestRef.current) return;
+          if (isCanceledError(error, controller.signal)) return;
 
-    const hasMore = useMemo(() => {
-        if (state.lastBatchSize === 0) {
-            return false;
-        }
-        if (
-            state.lastBatchSize !== undefined &&
-            state.lastBatchSize < pageSize
-        ) {
-            return false;
-        }
-        if (state.totalPages > 0) {
-            return state.page + 1 < state.totalPages;
-        }
-        const batchSize = state.lastBatchSize ?? pageSize;
-        return state.items.length >= batchSize;
-    }, [
-        pageSize,
-        state.items.length,
-        state.lastBatchSize,
-        state.page,
-        state.totalPages,
-    ]);
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            apply404(fetchMode, page);
+            return;
+          }
 
-    const beginFetch = useCallback((mode: FetchMode) => {
-        setState((prev) => {
-            if (mode === 'replace') return { ...initialState, loading: true };
-            return { ...prev, error: undefined, loadingMore: true };
+          applyError(error);
+        })
+        .finally(() => {
+          endFetch(requestId);
         });
-    }, []);
-
-    const endFetch = useCallback((requestId: number) => {
-        if (requestId !== requestRef.current) return;
-        setState((prev) => ({ ...prev, loading: false, loadingMore: false }));
-    }, []);
-
-    const apply404 = useCallback((mode: FetchMode, pageToLoad: number) => {
-        setState((prev) => {
-            if (mode === 'replace')
-                return {
-                    ...initialState,
-                    page: pageToLoad,
-                    totalPages: 0,
-                    lastBatchSize: 0,
-                    error: undefined,
-                };
-            return {
-                ...prev,
-                totalPages: prev.page + 1,
-                lastBatchSize: 0,
-                error: undefined,
-            };
-        });
-    }, []);
-
-    const applyError = useCallback((error: unknown) => {
-        const message = axios.isAxiosError(error)
-            ? `HTTP Error: ${error.response?.status ?? error.message}`
-            : error instanceof Error
-              ? error.message
-              : 'Fehler beim Laden der Bücher';
-
-        setState((prev) => ({ ...prev, error: message }));
-    }, []);
-
-    const applySuccess = useCallback(
-        (data: ApiResponse, mode: FetchMode, pageToLoad: number) => {
-            const activeFilters = filtersRef.current;
-
-            const raw = extractBooks(data);
-            const filtered = filterBooks(raw, activeFilters);
-            const sorted = sortBooks(filtered, activeFilters.sort);
-
-            setState((prev) => {
-                const merged =
-                    mode === 'replace' ? sorted : [...prev.items, ...sorted];
-                return {
-                    items: sortBooks(dedupeByIsbn(merged), activeFilters.sort),
-                    page: pageToLoad,
-                    totalPages: extractTotalPages(data),
-                    lastBatchSize: sorted.length,
-                    loading: prev.loading,
-                    loadingMore: prev.loadingMore,
-                    error: undefined,
-                };
-            });
-        },
-        [filtersRef],
-    );
-
-    const fetchPage = useCallback(
-        (pageToLoad: number, mode: FetchMode) => {
-            const requestId = requestRef.current + 1;
-            requestRef.current = requestId;
-
-            abortRef.current?.abort();
-            const controller = new AbortController();
-            abortRef.current = controller;
-
-            beginFetch(mode);
-
-            const activeQueryParams = queryParamsRef.current;
-
-            api.get<ApiResponse>('/', {
-                params: { ...activeQueryParams, page: pageToLoad },
-                signal: controller.signal,
-            })
-                .then(({ data }) => {
-                    if (requestId !== requestRef.current) return;
-                    applySuccess(data, mode, pageToLoad);
-                })
-                .catch((error) => {
-                    if (requestId !== requestRef.current) return;
-                    if (isCanceledError(error, controller.signal)) return;
-
-                    if (
-                        axios.isAxiosError(error) &&
-                        error.response?.status === 404
-                    ) {
-                        apply404(mode, pageToLoad);
-                        return;
-                    }
-
-                    applyError(error);
-                })
-                .finally(() => {
-                    endFetch(requestId);
-                });
-        },
-        [
-            apply404,
-            applyError,
-            applySuccess,
-            beginFetch,
-            endFetch,
-            queryParamsRef,
-        ],
-    );
-
-    useEffect(() => {
-        startTransition(() => {
-            fetchPage(0, 'replace');
-        });
-    }, [queryParams, startTransition, fetchPage]);
-
-    useEffect(() => () => abortRef.current?.abort(), []);
-
-    const loadMore = useCallback(() => {
-        if (state.loading || state.loadingMore || !hasMore) return;
-        fetchPage(state.page + 1, 'append');
-    }, [fetchPage, hasMore, state.loading, state.loadingMore, state.page]);
-
-    const refetch = useCallback(() => {
-        startTransition(() => {
-            fetchPage(0, 'replace');
-        });
-    }, [fetchPage, startTransition]);
-
-    const isEmpty = useMemo(
-        () => !state.loading && !state.error && state.items.length === 0,
-        [state.loading, state.error, state.items.length],
-    );
-
-    return {
-        ...state,
-        visible: state.items,
-        hasMore,
-        loadMore,
-        refetch,
-        isEmpty,
-        isPending,
     };
+
+    run(pageToLoad, mode);
+  }, [apply404, applyError, applySuccess, beginFetch, endFetch, queryParamsRef]);
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchPage(0, 'replace');
+    });
+  }, [queryParams, startTransition, fetchPage]);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  const loadMore = useCallback(() => {
+    if (state.loading || state.loadingMore || !hasMore) return;
+    fetchPage(state.page + 1, 'append');
+  }, [fetchPage, hasMore, state.loading, state.loadingMore, state.page]);
+
+  const refetch = useCallback(() => {
+    startTransition(() => {
+      fetchPage(0, 'replace');
+    });
+  }, [fetchPage, startTransition]);
+
+  const isEmpty = useMemo(() => !state.loading && !state.error && state.items.length === 0, [
+    state.loading,
+    state.error,
+    state.items.length,
+  ]);
+
+  return {
+    ...state,
+    visible: state.items,
+    hasMore,
+    loadMore,
+    refetch,
+    isEmpty,
+    isPending,
+  };
 };
