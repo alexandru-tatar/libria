@@ -24,6 +24,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { alpha, keyframes } from '@mui/material/styles';
 
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -37,9 +38,21 @@ import {
   useBookFilters,
   useBookSearch,
 } from '../hooks/useBookSearch';
-import './SearchForm.css';
 import type { BookItems } from '../types/book';
 import { BookDetail } from './BookDetail';
+import { EntryCount } from './EntryCount';
+
+const shimmer = keyframes`
+  0% {
+    transform: translateX(-40%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(40%);
+  }
+`;
 
 const quickTags = [
   'JavaScript',
@@ -68,7 +81,10 @@ export const BookSearchFormMUI = () => {
     loadMore,
     refetch,
     isEmpty,
+    totalItems,
   } = useBookSearch(filters, pageSize);
+  const totalCount = totalItems ?? visible.length;
+  const pageCount = visible.length;
 
   const handleSearch = useCallback(() => refetch(), [refetch]);
   const handleReset = useCallback(() => resetFilters(), [resetFilters]);
@@ -453,33 +469,76 @@ export const BookSearchFormMUI = () => {
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               {loadingMore && <CircularProgress size={18} />}
-              <Typography variant="body2" color="text.secondary">
-                {visible.length} angezeigt
-              </Typography>
+              <EntryCount
+                count={totalItems ?? visible.length}
+                label="Bücher"
+              />
             </Stack>
           </Stack>
 
-          <div
-            className={`book-results-grid${loadingMore ? ' loading-more' : ''}`}
+          <Box
+            sx={(theme) => {
+              const shimmerGradient = `linear-gradient(120deg, ${alpha(
+                theme.palette.background.paper,
+                0,
+              )} 0%, ${alpha(
+                theme.palette.mode === 'dark'
+                  ? theme.palette.primary.dark
+                  : theme.palette.grey[200],
+                0.9,
+              )} 55%, ${alpha(theme.palette.background.paper, 0)} 100%)`;
+
+              return {
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: 3.5,
+                mt: 3,
+                ...(loadingMore && {
+                  '& .book-card': {
+                    position: 'relative',
+                    isolation: 'isolate',
+                    filter: 'grayscale(1) saturate(0.4) brightness(0.93)',
+                    opacity: 0.86,
+                    transition: 'filter 850ms ease, opacity 850ms ease',
+                  },
+                  '& .book-card::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 2,
+                    background: shimmerGradient,
+                    animation: `${shimmer} 2s ease-in-out infinite`,
+                    pointerEvents: 'none',
+                  },
+                }),
+              };
+            }}
           >
             {visible.map((book) => (
-              <div
+              <Box
                 key={book.isbn}
                 onClick={() => setSelectedBook(book)}
-                style={{ cursor: 'pointer' }}
+                sx={{ cursor: 'pointer', height: '100%' }}
               >
                 <BookMediaMUI book={book} />
-              </div>
+              </Box>
             ))}
-          </div>
+          </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <Stack
+            spacing={0.75}
+            alignItems="center"
+            sx={{ py: 1 }}
+          >
             <LoadMoreBar
               loading={loadingMore}
               hasMore={hasMore}
               onLoadMore={handleLoadMore}
             />
-          </Box>
+            <Typography variant="caption" color="text.secondary">
+              {pageCount} von {totalCount} Büchern
+            </Typography>
+          </Stack>
         </Stack>
       )}
 
