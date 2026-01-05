@@ -32,7 +32,7 @@ const MotionPaper = motion(Paper);
 
 const featureDeck = [
   {
-    title: 'Keycloak Login',
+    title: 'Keycloak',
     desc: 'Password Grant, Refresh-Flow, Rollen-Auswertung im Frontend.',
     icon: <AutoAwesomeRoundedIcon />,
     tag: 'AUTH',
