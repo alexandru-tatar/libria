@@ -10,14 +10,21 @@ export function useBookUpdate() {
 
   /**
    * Aktualisiert ein vorhandenes Buch.
-   * @param id ID des Buches, das geändert werden soll
+   * @param id ID des Buches, das geaendert werden soll
    * @param payload Neue Daten des Buches
+   * @param version Versionsnummer fuer If-Match
    * @returns true bei Erfolg, false bei Fehler
    */
-  const updateBook = async (id: string, payload: BuchDTO) => {
+  const updateBook = async (id: string, payload: BuchDTO, version?: number) => {
     setSubmitting(true);
     try {
-      await api.put(`/${id}`, payload);
+      if (version === undefined || version === null) {
+        setErrorMsg('Keine Versionsnummer vorhanden. Bitte erneut oeffnen und versuchen.');
+        return false;
+      }
+
+      const etag = `"${version}"`;
+      await api.put(`/${id}`, payload, { headers: { 'If-Match': etag } });
 
       const title = payload.titel?.titel ?? payload.isbn ?? 'Buch';
       setSuccessMsg(`${title} erfolgreich aktualisiert.`);

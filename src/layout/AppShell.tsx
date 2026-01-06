@@ -10,7 +10,6 @@ import {
   Typography,
   Tooltip,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useState } from 'react';
@@ -30,9 +29,6 @@ export function AppShell() {
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
       <AppBar position="static" elevation={0}>
         <Toolbar>
-          <IconButton color="inherit" edge="start" sx={{ mr: 2 }}>
-            <MenuIcon />
-          </IconButton>
           <Box
             sx={{
               display: 'flex',
@@ -119,3 +115,4 @@ export function AppShell() {
     </Box>
   );
 }
+

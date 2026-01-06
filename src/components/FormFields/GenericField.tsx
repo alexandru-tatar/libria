@@ -103,6 +103,7 @@ export function GenericField<T extends FieldValues>({
             fullWidth
             error={Boolean(fieldError)}
             helperText={fieldError?.message ?? helperText}
+            InputLabelProps={type === 'date' ? { shrink: true } : undefined}
             sx={sx}
           >
             {select &&
@@ -117,3 +118,4 @@ export function GenericField<T extends FieldValues>({
     />
   );
 }
+
