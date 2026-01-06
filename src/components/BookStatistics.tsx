@@ -1,67 +1,140 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
+  Avatar,
   Box,
-  Typography,
+  Card,
   Divider,
   List,
   ListItem,
   ListItemText,
-  Card,
-  Avatar,
+  Typography,
   useTheme,
 } from '@mui/material';
-import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
-import EuroIcon from '@mui/icons-material/Euro';
-import StarIcon from '@mui/icons-material/Star';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import BlockIcon from '@mui/icons-material/Block';
+import EuroIcon from '@mui/icons-material/Euro';
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import PercentIcon from '@mui/icons-material/Percent';
+import StarIcon from '@mui/icons-material/Star';
+import { defaultFilters, useBookSearch } from '../hooks/useBookSearch';
 import type { Book } from '../types/book';
 
-type BookStatisticsProps = {
-  books: Book[];
+const toTime = (value?: unknown): number => {
+  if (!value) {
+    return 0;
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value !== 'string') {
+    return 0;
+  }
+
+  const dateStr = value.trim();
+  if (!dateStr) {
+    return 0;
+  }
+
+  // Nur dd.mm.yyyy als "deutsches Datum" behandeln.
+  // ISO-Datum wie 2025-02-01T00:00:00.000Z enthält auch '.', darf aber NICHT hier reinfallen.
+  const isGermanDate = /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateStr);
+  if (isGermanDate) {
+    const [dayStr, monthStr, yearStr] = dateStr.split('.');
+    const day = parseInt(dayStr ?? '', 10);
+    const month = parseInt(monthStr ?? '', 10);
+    const year = parseInt(yearStr ?? '', 10);
+
+    if (Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)) {
+      return new Date(year, month - 1, day).getTime();
+    }
+
+    return 0;
+  }
+
+  const time = Date.parse(dateStr);
+  return Number.isFinite(time) ? time : 0;
 };
 
-export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
+const formatDate = (value?: unknown): string => {
+  const time = toTime(value);
+  if (!time) {
+    return typeof value === 'string' ? value : '';
+  }
+  return new Date(time).toLocaleDateString('de-DE');
+};
+
+export const BookStatistics: React.FC = () => {
   const theme = useTheme();
+  const pageSize = 50;
+
+  const {
+    visible: books,
+    hasMore,
+    loadMore,
+    loading,
+    error,
+  } = useBookSearch(defaultFilters, pageSize);
+
+  useEffect(() => {
+    if (hasMore && !loading) {
+      loadMore();
+    }
+  }, [hasMore, loading, loadMore]);
+
+  const latestBooks = useMemo((): Book[] => {
+    return [...books]
+      .filter(({ datum }) => Boolean(datum))
+      .sort((a, b) => toTime(b.datum) - toTime(a.datum))
+      .slice(0, 5);
+  }, [books]);
+
+  if (loading && books.length === 0) {
+    return <div>Statistiken werden geladen…</div>;
+  }
+
+  if (error) {
+    return <div>{`Fehler: ${error}`}</div>;
+  }
+
   const anzahl = books.length;
-  const durchschnittspreis =
-    anzahl > 0
-      ? (
-          books.reduce((sum, b) => sum + Number(b.preis ?? 0), 0) / anzahl
-        ).toFixed(2)
-      : '–';
-  const durchschnittsbewertung =
-    anzahl > 0
-      ? (books.reduce((sum, b) => sum + (b.rating ?? 0), 0) / anzahl).toFixed(2)
-      : '–';
 
-  const lieferbar = books.filter((b) => b.lieferbar === true).length;
-  const nichtLieferbar = books.filter((b) => b.lieferbar === false).length;
-  const mitRabatt = books.filter(
-    (b) => typeof b.rabatt === 'number' && b.rabatt > 0,
-  ).length;
+  const preisSumme = books.reduce((sum, { preis }) => {
+    const preisZahl = Number(preis);
+    return Number.isFinite(preisZahl) ? sum + preisZahl : sum;
+  }, 0);
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString();
-  };
+  const durchschnittspreis = anzahl > 0 ? (preisSumme / anzahl).toFixed(2) : '–';
 
-  // Karten-Infos als Array für Mapping
+  const ratingSumme = books.reduce((sum, { rating }) => {
+    const ratingZahl = Number(rating);
+    return Number.isFinite(ratingZahl) ? sum + ratingZahl : sum;
+  }, 0);
+
+  const durchschnittsbewertung = anzahl > 0 ? (ratingSumme / anzahl).toFixed(2) : '–';
+
+  const lieferbar = books.filter(({ lieferbar: isLieferbar }) => isLieferbar === true).length;
+  const nichtLieferbar = books.filter(({ lieferbar: isLieferbar }) => isLieferbar === false).length;
+  const mitRabatt = books.filter(({ rabatt }) => typeof rabatt === 'number' && rabatt > 0).length;
+
   const stats = [
     {
       label: 'Gefundene Bücher',
       value: anzahl,
-      icon: <LocalLibraryIcon fontSize="medium" />,
-      color: '#1976d2',
+      icon: <LocalLibraryIcon fontSize='medium' />,
+      color: theme.palette.primary.main,
       valueColor: theme.palette.primary.main,
     },
     {
       label: 'Ø Preis',
       value: `${durchschnittspreis} €`,
-      icon: <EuroIcon fontSize="medium" />,
-      color: '#388e3c',
+      icon: <EuroIcon fontSize='medium' />,
+      color: theme.palette.success.main,
       valueColor: theme.palette.success.dark,
     },
     {
@@ -70,32 +143,36 @@ export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
         <>
           {durchschnittsbewertung}{' '}
           <StarIcon
-            sx={{ fontSize: 20, mb: '-3px', color: theme.palette.warning.dark }}
+            sx={{
+              fontSize: 20,
+              mb: '-3px',
+              color: theme.palette.warning.dark,
+            }}
           />
         </>
       ),
-      icon: <StarIcon fontSize="medium" />,
-      color: '#f57c00',
+      icon: <StarIcon fontSize='medium' />,
+      color: theme.palette.warning.main,
       valueColor: theme.palette.warning.dark,
     },
     {
       label: 'Lieferbar',
       value: lieferbar,
-      icon: <LocalShippingIcon fontSize="medium" />,
+      icon: <LocalShippingIcon fontSize='medium' />,
       color: theme.palette.info.main,
       valueColor: theme.palette.info.main,
     },
     {
       label: 'Nicht lieferbar',
       value: nichtLieferbar,
-      icon: <BlockIcon fontSize="medium" />,
+      icon: <BlockIcon fontSize='medium' />,
       color: theme.palette.error.main,
       valueColor: theme.palette.error.main,
     },
     {
       label: 'Bücher mit Rabatt',
       value: mitRabatt,
-      icon: <PercentIcon fontSize="medium" />,
+      icon: <PercentIcon fontSize='medium' />,
       color: theme.palette.secondary.main,
       valueColor: theme.palette.secondary.main,
     },
@@ -109,10 +186,12 @@ export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
         borderRadius: 4,
       }}
     >
-      <Typography variant="h4" fontWeight={700} mb={1}>
+      <Typography variant='h4' fontWeight={700} mb={1}>
         Buch-Statistiken
       </Typography>
+
       <Divider sx={{ mb: 3 }} />
+
       <Box
         sx={{
           display: 'grid',
@@ -121,9 +200,9 @@ export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
           mb: 2,
         }}
       >
-        {stats.map((stat, i) => (
+        {stats.map(({ label, value, icon, color, valueColor }, i) => (
           <Card
-            key={stat.label}
+            key={label}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -147,45 +226,48 @@ export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
           >
             <Avatar
               sx={{
-                bgcolor: stat.color,
+                bgcolor: color,
                 width: 38,
                 height: 38,
                 mr: 1.5,
                 boxShadow: 1,
               }}
             >
-              {stat.icon}
+              {icon}
             </Avatar>
+
             <Box>
-              <Typography color="text.secondary" fontWeight={500} fontSize={13}>
-                {stat.label}
+              <Typography color='text.secondary' fontWeight={500} fontSize={13}>
+                {label}
               </Typography>
+
               <Typography
                 sx={{
                   fontSize: 24,
                   fontWeight: 700,
-                  color: stat.valueColor,
+                  color: valueColor,
                   lineHeight: 1.1,
                 }}
               >
-                {stat.value}
+                {value}
               </Typography>
             </Box>
           </Card>
         ))}
       </Box>
+
       <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Zuletzt hinzugefügte Bücher
+
+      <Typography variant='subtitle1' fontWeight={600} gutterBottom>
+        Die 5 zuletzt hinzugefügte Bücher
       </Typography>
+
       <List dense>
-        {books.slice(0, 5).map((book) => (
-          <ListItem key={book.id} disableGutters>
+        {latestBooks.map(({ id, titel, datum }) => (
+          <ListItem key={id} disableGutters>
             <ListItemText
-              primary={
-                <span style={{ fontWeight: 600 }}>{book.titel?.titel}</span>
-              }
-              secondary={book.datum ? formatDate(book.datum) : ''}
+              primary={<span style={{ fontWeight: 600 }}>{titel?.titel}</span>}
+              secondary={datum ? formatDate(datum) : ''}
             />
           </ListItem>
         ))}
