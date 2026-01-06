@@ -3,10 +3,10 @@ import {
   Avatar,
   Box,
   Card,
-  Divider,
   List,
   ListItem,
   ListItemText,
+  Stack,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -18,6 +18,7 @@ import PercentIcon from '@mui/icons-material/Percent';
 import StarIcon from '@mui/icons-material/Star';
 import { defaultFilters, useBookSearch } from '../hooks/useBookSearch';
 import type { Book } from '../types/book';
+import './BookStatistics.css';
 
 const toTime = (value?: unknown): number => {
   if (!value) {
@@ -41,8 +42,6 @@ const toTime = (value?: unknown): number => {
     return 0;
   }
 
-  // Nur dd.mm.yyyy als "deutsches Datum" behandeln.
-  // ISO-Datum wie 2025-02-01T00:00:00.000Z enthält auch '.', darf aber NICHT hier reinfallen.
   const isGermanDate = /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateStr);
   if (isGermanDate) {
     const [dayStr, monthStr, yearStr] = dateStr.split('.');
@@ -94,6 +93,39 @@ export const BookStatistics: React.FC = () => {
       .slice(0, 5);
   }, [books]);
 
+  const anzahl = books.length;
+
+  const preisSumme = useMemo((): number => {
+    return books.reduce((sum, { preis }) => {
+      const preisZahl = Number(preis);
+      return Number.isFinite(preisZahl) ? sum + preisZahl : sum;
+    }, 0);
+  }, [books]);
+
+  const ratingSumme = useMemo((): number => {
+    return books.reduce((sum, { rating }) => {
+      const ratingZahl = Number(rating);
+      return Number.isFinite(ratingZahl) ? sum + ratingZahl : sum;
+    }, 0);
+  }, [books]);
+
+  const lieferbar = useMemo((): number => {
+    return books.filter(({ lieferbar: isLieferbar }) => isLieferbar === true).length;
+  }, [books]);
+
+  const nichtLieferbar = useMemo((): number => {
+    return books.filter(({ lieferbar: isLieferbar }) => isLieferbar === false).length;
+  }, [books]);
+
+  const mitRabatt = useMemo((): number => {
+    return books.filter(({ rabatt }) => typeof rabatt === 'number' && rabatt > 0).length;
+  }, [books]);
+
+  const durchschnittspreis = anzahl > 0 ? (preisSumme / anzahl).toFixed(2) : '–';
+  const durchschnittsbewertung = anzahl > 0 ? (ratingSumme / anzahl).toFixed(2) : '–';
+
+  const anzahlText = loading ? '…' : `${anzahl}`;
+
   if (loading && books.length === 0) {
     return <div>Statistiken werden geladen…</div>;
   }
@@ -101,26 +133,6 @@ export const BookStatistics: React.FC = () => {
   if (error) {
     return <div>{`Fehler: ${error}`}</div>;
   }
-
-  const anzahl = books.length;
-
-  const preisSumme = books.reduce((sum, { preis }) => {
-    const preisZahl = Number(preis);
-    return Number.isFinite(preisZahl) ? sum + preisZahl : sum;
-  }, 0);
-
-  const durchschnittspreis = anzahl > 0 ? (preisSumme / anzahl).toFixed(2) : '–';
-
-  const ratingSumme = books.reduce((sum, { rating }) => {
-    const ratingZahl = Number(rating);
-    return Number.isFinite(ratingZahl) ? sum + ratingZahl : sum;
-  }, 0);
-
-  const durchschnittsbewertung = anzahl > 0 ? (ratingSumme / anzahl).toFixed(2) : '–';
-
-  const lieferbar = books.filter(({ lieferbar: isLieferbar }) => isLieferbar === true).length;
-  const nichtLieferbar = books.filter(({ lieferbar: isLieferbar }) => isLieferbar === false).length;
-  const mitRabatt = books.filter(({ rabatt }) => typeof rabatt === 'number' && rabatt > 0).length;
 
   const stats = [
     {
@@ -142,13 +154,7 @@ export const BookStatistics: React.FC = () => {
       value: (
         <>
           {durchschnittsbewertung}{' '}
-          <StarIcon
-            sx={{
-              fontSize: 20,
-              mb: '-3px',
-              color: theme.palette.warning.dark,
-            }}
-          />
+          <StarIcon sx={{ fontSize: 20, mb: '-3px', color: theme.palette.warning.dark }} />
         </>
       ),
       icon: <StarIcon fontSize='medium' />,
@@ -179,27 +185,24 @@ export const BookStatistics: React.FC = () => {
   ];
 
   return (
-    <Box
-      sx={{
-        p: { xs: 1, sm: 2, md: 3 },
-        background: 'linear-gradient(135deg, #f7f7fa 60%, #e3eafc 100%)',
-        borderRadius: 4,
-      }}
-    >
-      <Typography variant='h4' fontWeight={700} mb={1}>
-        Buch-Statistiken
+    <Box>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems='center'
+        justifyContent='space-between'
+        className='bookStatsTopRow'
+        spacing={2}
+      >
+        <Typography variant='h6' fontWeight={700}>
+          Buch-Statistiken
+        </Typography>
+      </Stack>
+
+      <Typography variant='subtitle1' fontWeight={700} className='bookStatsCount'>
+        Gefundene Bücher: {anzahlText}
       </Typography>
 
-      <Divider sx={{ mb: 3 }} />
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-          gap: { xs: 1.5, sm: 2 },
-          mb: 2,
-        }}
-      >
+      <Box className='bookStatsGrid'>
         {stats.map(({ label, value, icon, color, valueColor }, i) => (
           <Card
             key={label}
@@ -240,7 +243,6 @@ export const BookStatistics: React.FC = () => {
               <Typography color='text.secondary' fontWeight={500} fontSize={13}>
                 {label}
               </Typography>
-
               <Typography
                 sx={{
                   fontSize: 24,
@@ -256,10 +258,8 @@ export const BookStatistics: React.FC = () => {
         ))}
       </Box>
 
-      <Divider sx={{ my: 2 }} />
-
-      <Typography variant='subtitle1' fontWeight={600} gutterBottom>
-        Die 5 zuletzt hinzugefügte Bücher
+      <Typography variant='subtitle1' fontWeight={700} className='bookStatsLatestTitle'>
+        Die 5 zuletzt hinzugefügten Bücher
       </Typography>
 
       <List dense>
