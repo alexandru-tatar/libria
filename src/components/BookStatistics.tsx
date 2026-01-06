@@ -18,7 +18,7 @@ import PercentIcon from '@mui/icons-material/Percent';
 import StarIcon from '@mui/icons-material/Star';
 import { defaultFilters, useBookSearch } from '../hooks/useBookSearch';
 import type { Book } from '../types/book';
-import './bookStatistics.css';
+import './BookStatistics.css';
 
 const toTime = (value?: unknown): number => {
   if (!value) {
