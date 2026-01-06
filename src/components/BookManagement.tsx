@@ -9,6 +9,7 @@ import {
   Typography,
   Fade,
   Divider,
+  Alert,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import type { BuchDTO } from '../types/book';
@@ -39,9 +40,12 @@ export function BookManagement({ open, onClose, initialData, version, onSuccess 
 
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [lastMode, setLastMode] = useState<'create' | 'edit'>(isEditMode ? 'edit' : 'create');
 
   // --- Form ---
   const { control, handleSubmit, reset, formState: { errors } } = useForm<BuchDTO>({
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
     defaultValues: initialData ?? { titel: { titel: '', untertitel: '' } },
   });
 
@@ -97,6 +101,7 @@ export function BookManagement({ open, onClose, initialData, version, onSuccess 
     }
 
     if (success) {
+      setLastMode(isEditMode ? 'edit' : 'create');
       setSuccessDialogOpen(true);
       onSuccess?.();
       closeDialog();
@@ -126,6 +131,11 @@ export function BookManagement({ open, onClose, initialData, version, onSuccess 
             <HomepageField<BuchDTO> name="homepage" control={control} errors={errors} />
             <SchlagwoerterField<BuchDTO> name="schlagwoerter" control={control} errors={errors} />
             <TitelFields<BuchDTO> control={control} errors={errors} />
+            {isEditMode && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Hinweis: Titel und Untertitel werden derzeit serverseitig nicht aktualisiert.
+              </Alert>
+            )}
             <AbbildungField<BuchDTO> name="abbildungen" control={control} errors={errors} />
           </Box>
         </DialogContent>
@@ -142,11 +152,13 @@ export function BookManagement({ open, onClose, initialData, version, onSuccess 
         <DialogTitle sx={{ textAlign: 'center', pt: 5 }}>Alles erledigt</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ textAlign: 'center', mb: 1.5, color: 'success.main' }}>
-            {successMsg || 'Aktion erfolgreich abgeschlossen.'}
+            {successMsg || (lastMode === 'edit' ? 'Buch erfolgreich aktualisiert.' : 'Buch erfolgreich angelegt.')}
           </Typography>
           <Divider sx={{ my: 1.5 }} />
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-            Du kannst jetzt ein weiteres Buch anlegen oder das Fenster schließen.
+            {lastMode === 'edit'
+              ? 'Du kannst das Fenster schließen.'
+              : 'Du kannst jetzt ein weiteres Buch anlegen oder das Fenster schließen.'}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
@@ -177,9 +189,3 @@ export function BookManagement({ open, onClose, initialData, version, onSuccess 
     </>
   );
 }
-
-
-
-
-
-

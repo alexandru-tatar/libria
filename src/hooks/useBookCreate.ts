@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { BuchDTO } from '../types/book';
 import { api } from '../api/axios';
-import { isAxiosError } from 'axios';
+import { buildErrorMessage, buildSuccessMessage } from './bookMessages';
 
 export function useBookCreate() {
   const [submitting, setSubmitting] = useState(false);
@@ -12,14 +12,10 @@ export function useBookCreate() {
     setSubmitting(true);
     try {
       await api.post('/', payload);
-      const title = payload.titel?.titel ?? payload.isbn ?? 'Buch';
-      setSuccessMsg(`${title} erfolgreich angelegt.`);
+      setSuccessMsg(buildSuccessMessage(payload, 'angelegt'));
       return true;
     } catch (err) {
-      const msg = isAxiosError(err)
-        ? `Fehler: ${err.response?.status ?? ''} ${JSON.stringify(err.response?.data) || err.message}`
-        : 'Unbekannter Fehler beim Anlegen';
-      setErrorMsg(msg);
+      setErrorMsg(buildErrorMessage(err, 'Anlegen'));
       return false;
     } finally {
       setSubmitting(false);

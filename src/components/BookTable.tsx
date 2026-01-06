@@ -190,21 +190,18 @@ export function BookTable({
       </Paper>
 
       {/* BookManagement-Dialog zum Bearbeiten */}
-      {editingBook && (
-        <BookManagement
-          open={dialogOpen}
-          onClose={handleDialogClose}
-          initialData={editingBook} // vorausgefuellte Werte
-          version={editingVersion ?? undefined}
-          onSuccess={refetch}
-        />
-      )}
+      <BookManagement
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        initialData={editingBook ?? undefined}
+        version={editingVersion ?? undefined}
+        onSuccess={refetch}
+      />
     </>
   );
 }
 
 export default BookTable;
-
 
 
 
