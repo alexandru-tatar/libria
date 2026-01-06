@@ -1,9 +1,10 @@
 export type Buchart = 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
 
 export interface TitelDTO {
-    id: number;
+    id?: number;
     titel: string;
     untertitel?: string;
+    buchId?: number;
 }
 
 export interface AbbildungDTO {
@@ -33,4 +34,3 @@ export interface BuchDTO extends BuchDtoOhneRef {
 
 export type BookItems = BuchDTO;
 export type Book = BuchDTO;
-

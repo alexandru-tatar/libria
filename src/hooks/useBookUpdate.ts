@@ -1,7 +1,27 @@
 import { useState } from 'react';
 import type { BuchDTO } from '../types/book';
 import { api } from '../api/axios';
-import { isAxiosError } from 'axios';
+import { buildErrorMessage, buildSuccessMessage } from './bookMessages';
+
+const normalizeSubtitle = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return trimmed.toLowerCase() === 'null' ? null : trimmed;
+};
+
+const buildUpdatePayload = (payload: BuchDTO) => {
+  const { titel, ...rest } = payload;
+  const titelUpdate = titel
+    ? {
+        update: {
+          titel: titel.titel,
+          untertitel: normalizeSubtitle(titel.untertitel),
+        },
+      }
+    : undefined;
+
+  return { ...rest, titel: titelUpdate };
+};
 
 export function useBookUpdate() {
   const [submitting, setSubmitting] = useState(false);
@@ -24,16 +44,13 @@ export function useBookUpdate() {
       }
 
       const etag = `"${version}"`;
-      await api.put(`/${id}`, payload, { headers: { 'If-Match': etag } });
+      const requestBody = buildUpdatePayload(payload);
+      await api.put(`/${id}`, requestBody, { headers: { 'If-Match': etag } });
 
-      const title = payload.titel?.titel ?? payload.isbn ?? 'Buch';
-      setSuccessMsg(`${title} erfolgreich aktualisiert.`);
+      setSuccessMsg(buildSuccessMessage(payload, 'aktualisiert'));
       return true;
     } catch (err) {
-      const msg = isAxiosError(err)
-        ? `Fehler: ${err.response?.status ?? ''} ${JSON.stringify(err.response?.data) || err.message}`
-        : 'Unbekannter Fehler beim Aktualisieren';
-      setErrorMsg(msg);
+      setErrorMsg(buildErrorMessage(err, 'Aktualisieren'));
       return false;
     } finally {
       setSubmitting(false);
