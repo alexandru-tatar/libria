@@ -14,6 +14,7 @@ export interface AbbildungDTO {
 
 export interface BuchDtoOhneRef {
     id: number;
+    version?: number;
     isbn: string;
     rating: number;
     art?: Buchart;
@@ -32,3 +33,4 @@ export interface BuchDTO extends BuchDtoOhneRef {
 
 export type BookItems = BuchDTO;
 export type Book = BuchDTO;
+

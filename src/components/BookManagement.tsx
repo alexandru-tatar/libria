@@ -29,10 +29,12 @@ import { useBookUpdate } from '../hooks/useBookUpdate';
 type BookManagementProps = {
   open: boolean;
   onClose: () => void;
-  initialData?: BuchDTO; // optional für Bearbeiten
+  initialData?: BuchDTO; // optional fuer Bearbeiten
+  version?: number;
+  onSuccess?: () => void;
 };
 
-export function BookManagement({ open, onClose, initialData }: BookManagementProps) {
+export function BookManagement({ open, onClose, initialData, version, onSuccess }: BookManagementProps) {
   const isEditMode = Boolean(initialData);
 
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
@@ -88,7 +90,7 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
 
     if (isEditMode && initialData?.id != null) {
       // Bearbeiten
-      success = await updateBook(initialData.id.toString(), payload);
+      success = await updateBook(initialData.id.toString(), payload, version);
     } else {
       // Anlegen
       success = await createBook(payload);
@@ -96,6 +98,7 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
 
     if (success) {
       setSuccessDialogOpen(true);
+      onSuccess?.();
       closeDialog();
     } else {
       setErrorDialogOpen(true);
@@ -174,3 +177,9 @@ export function BookManagement({ open, onClose, initialData }: BookManagementPro
     </>
   );
 }
+
+
+
+
+
+

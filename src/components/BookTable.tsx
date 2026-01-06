@@ -46,6 +46,7 @@ export function BookTable({
   const { deleteBook, loading: deleting } = useBookDelete();
 
   const [editingBook, setEditingBook] = useState<BuchDTO | null>(null);
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => onCountChange?.(visible.length), [visible.length, onCountChange]);
@@ -63,13 +64,18 @@ export function BookTable({
   };
 
   const handleEditClick = (b: BuchDTO) => {
+    if (b.version === undefined || b.version === null) {
+      console.error('Keine Versionsnummer am Buch gefunden.');
+    }
     setEditingBook(b);
+    setEditingVersion(b.version ?? null);
     setDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
     setEditingBook(null);
+    setEditingVersion(null);
   };
 
   return (
@@ -188,7 +194,9 @@ export function BookTable({
         <BookManagement
           open={dialogOpen}
           onClose={handleDialogClose}
-          initialData={editingBook} // vorausgefüllte Werte
+          initialData={editingBook} // vorausgefuellte Werte
+          version={editingVersion ?? undefined}
+          onSuccess={refetch}
         />
       )}
     </>
@@ -196,3 +204,10 @@ export function BookTable({
 }
 
 export default BookTable;
+
+
+
+
+
+
+
