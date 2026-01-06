@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -10,20 +10,28 @@ import {
   Avatar,
   useTheme,
 } from '@mui/material';
+import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import EuroIcon from '@mui/icons-material/Euro';
 import StarIcon from '@mui/icons-material/Star';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import BlockIcon from '@mui/icons-material/Block';
 import PercentIcon from '@mui/icons-material/Percent';
-import type { Book } from '../types/book';
 
-type BookStatisticsProps = {
-  books: Book[];
-};
-
-export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
+export const BookStatistics: React.FC = () => {
   const theme = useTheme();
+  const pageSize = 50;
+  const { visible: books, hasMore, loadMore, loading, error } = useBookSearch(defaultFilters, pageSize);
+
+  useEffect(() => {
+    if (hasMore && !loading) {
+      loadMore();
+    }
+  }, [hasMore, loading, loadMore]);
+
+  if (loading && books.length === 0) return <div>Statistiken werden geladen…</div>;
+  if (error) return <div>Fehler: {error}</div>;
+
   const anzahl = books.length;
   const durchschnittspreis =
     anzahl > 0
@@ -48,7 +56,6 @@ export const BookStatistics: React.FC<BookStatisticsProps> = ({ books }) => {
     return d.toLocaleDateString();
   };
 
-  // Karten-Infos als Array für Mapping
   const stats = [
     {
       label: 'Gefundene Bücher',
