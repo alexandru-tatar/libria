@@ -15,6 +15,8 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
+  Radio,
+  RadioGroup,
   Select,
   Slider,
   Stack,
@@ -70,6 +72,7 @@ export const BookSearchFormMUI = () => {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<BookItems | null>(null);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   const { filters, setFilterValue, toggleTag, resetFilters } = useBookFilters();
   const {
@@ -379,6 +382,26 @@ export const BookSearchFormMUI = () => {
               </Grid>
             </Grid>
 
+             <Grid
+                size={{ xs: 12, md: 6 }}
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <FormControl>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    Ansicht
+                  </Typography>
+                  <RadioGroup
+                    row
+                    value={viewMode}
+                    onChange={(e) => {
+                      setViewMode(e.target.value as 'cards' | 'list');
+                    }}
+                  >
+                    <FormControlLabel value="cards" control={<Radio />} label="Karten" />
+                    <FormControlLabel value="list" control={<Radio />} label="Liste" />
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
             <Divider sx={{ my: 2 }} />
 
             <Typography variant="subtitle2" fontWeight={900} sx={{ mb: 1 }}>
@@ -490,8 +513,11 @@ export const BookSearchFormMUI = () => {
 
               return {
                 display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: 3.5,
+                gridTemplateColumns:
+                  viewMode === 'cards'
+                    ? { xs: '1fr', md: '1fr 1fr' }
+                    : '1fr',
+                gap: viewMode === 'cards' ? 3.5 : 1.5,
                 mt: 3,
                 ...(loadingMore && {
                   '& .book-card': {
