@@ -1,0 +1,31 @@
+@startuml Zustandsdiagramm
+
+state "BookSearchFormMUI" as Search {
+
+  state "Suchformular" as Suchformular
+  state "Ergebnisse" as Ergebnisse
+
+  state "Suchergebnis" as Suchergebnis {
+    state "Bücherliste" as Buecherliste
+    state "KeineTreffer" as KeineTreffer
+    state "Fehler" as Fehler
+  }
+
+  state "Buchdetails" as Buchdetails
+
+  [*] --> Suchformular
+  Suchformular --> Ergebnisse : Antwort erhalten
+
+  Ergebnisse --> Buecherliste : visible.length > 0
+  Ergebnisse --> KeineTreffer : isEmpty
+  Ergebnisse --> Fehler : error
+
+  Buecherliste --> Buecherliste : "Mehr laden"
+  Buecherliste --> Buchdetails : Buch anklicken
+  Buchdetails --> Buecherliste : schließen
+
+  KeineTreffer --> Suchformular : Reset / neue Suche
+  Fehler --> Suchformular : Reset / neue Suche
+}
+
+@enduml
