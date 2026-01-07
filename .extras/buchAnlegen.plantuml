@@ -1,0 +1,28 @@
+@startuml Zustandsdiagramm
+
+state "BookManagement" as Management {
+
+  state "Dialog offen" as Dialog {
+    state "Formular" as Formular
+    state "Anlegen läuft" as Submitting
+    state "Error-Dialog" as ErrorDialog
+  }
+
+  state "Success-Dialog" as SuccessDialog
+
+  [*] --> Formular : Dialog öffnen
+
+  Formular --> Formular : Eingaben ändern
+  Formular --> Formular : Anlegen\nungültig (Feldfehler)
+  Formular --> Submitting : Anlegen\nvalid
+
+  Submitting --> SuccessDialog : success
+  Submitting --> ErrorDialog : error
+
+  ErrorDialog --> Formular : Verstanden
+  SuccessDialog --> [*] : Weiter
+
+  Dialog --> [*] : Abbrechen
+}
+
+@enduml
