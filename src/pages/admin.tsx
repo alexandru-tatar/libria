@@ -9,9 +9,9 @@ import {
 import { Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
-import BookTable from '../components/BookTable';
-import { BookManagement } from '../components/BookManagement';
-import { BookStatistics } from '../components/BookStatistics';
+import BookTable from '../components/admin-panel/BookTableComponent';
+import { BookManagement } from '../components/admin-panel/BookManagementComponent';
+import { BookStatistics } from '../components/admin-panel/BookStatistics';
 
 export const AdminPage = () => {
   const { roles } = useAuth();

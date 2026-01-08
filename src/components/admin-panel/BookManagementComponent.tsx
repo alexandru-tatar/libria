@@ -12,20 +12,20 @@ import {
   Alert,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import type { BuchDTO } from '../types/book';
-import { IsbnField } from './FormFields/IsbnField';
-import { RatingField } from './FormFields/RatingField';
-import { PreisField } from './FormFields/PreisField';
-import { LieferbarField } from './FormFields/LieferbarField';
-import { TitelFields } from './FormFields/TitelField';
-import { AbbildungField } from './FormFields/AbbildungField';
-import { ArtField } from './FormFields/ArtField';
-import { SchlagwoerterField } from './FormFields/SchlagwoerterField';
-import { RabattField } from './FormFields/RabattField';
-import { HomepageField } from './FormFields/HomePageField';
-import { DatumField } from './FormFields/DatumField';
-import { useBookCreate } from '../hooks/useBookCreate';
-import { useBookUpdate } from '../hooks/useBookUpdate';
+import type { BuchDTO } from '../../types/book';
+import { IsbnField } from '../FormFields/IsbnField';
+import { RatingField } from '../FormFields/RatingField';
+import { PreisField } from '../FormFields/PreisField';
+import { LieferbarField } from '../FormFields/LieferbarField';
+import { TitelFields } from '../FormFields/TitelField';
+import { AbbildungField } from '../FormFields/AbbildungField';
+import { ArtField } from '../FormFields/ArtField';
+import { SchlagwoerterField } from '../FormFields/SchlagwoerterField';
+import { RabattField } from '../FormFields/RabattField';
+import { HomepageField } from '../FormFields/HomePageField';
+import { DatumField } from '../FormFields/DatumField';
+import { useBookCreate } from '../../hooks/useBookCreate';
+import { useBookUpdate } from '../../hooks/useBookUpdate';
 
 type BookManagementProps = {
   open: boolean;

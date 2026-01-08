@@ -15,11 +15,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useEffect, useState } from 'react';
-import { useBookSearch, defaultFilters } from '../hooks/useBookSearch';
-import { useBookDelete } from '../hooks/useBookDelete';
-import type { Filters } from '../hooks/useBookSearch';
-import type { BuchDTO } from '../types/book';
-import { BookManagement } from './BookManagement';
+import { useBookSearch, defaultFilters } from '../../hooks/useBookSearch';
+import { useBookDelete } from '../../hooks/useBookDelete';
+import type { Filters } from '../../hooks/useBookSearch';
+import type { BuchDTO } from '../../types/book';
+import { BookManagement } from '../admin-panel/BookManagementComponent';
 
 type BookTableProps = {
   filters?: Filters;

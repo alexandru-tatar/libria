@@ -16,8 +16,8 @@ import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import PercentIcon from '@mui/icons-material/Percent';
 import StarIcon from '@mui/icons-material/Star';
-import { defaultFilters, useBookSearch } from '../hooks/useBookSearch';
-import type { Book } from '../types/book';
+import { defaultFilters, useBookSearch } from '../../hooks/useBookSearch';
+import type { Book } from '../../types/book';
 import './BookStatistics.css';
 
 const toTime = (value?: unknown): number => {
