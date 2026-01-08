@@ -513,7 +513,10 @@ export const BookSearchFormMUI = () => {
 
               return {
                 display: 'grid',
-                gridTemplateColumns: viewMode === 'cards' ? '1fr' : '1fr',
+                gridTemplateColumns:
+                  viewMode === 'cards'
+                    ? 'repeat(auto-fit, minmax(260px, 1fr))'
+                    : '1fr',
                 gap: viewMode === 'cards' ? 3.5 : 1.5,
                 mt: 3,
                 ...(loadingMore && {
