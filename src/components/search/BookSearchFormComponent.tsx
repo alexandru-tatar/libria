@@ -5,56 +5,33 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Collapse,
-  Divider,
-  FormControl,
-  FormControlLabel,
   Grid,
   InputAdornment,
-  InputLabel,
-  MenuItem,
-  Radio,
-  RadioGroup,
-  Select,
-  Slider,
   Stack,
-  Switch,
   TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { alpha, keyframes } from '@mui/material/styles';
 
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 
-import { BookMediaMUI } from '../MediaComponent';
 import { LoadMoreBar } from './LoadMoreBarComponent';
 import {
-  type BookArt,
   useBookFilters,
   useBookSearch,
 } from '../../hooks/useBookSearch';
 import type { BookItems } from '../../types/book';
 import { BookDetail } from './BookDetailComponent';
-import { EntryCount } from '../EntryCountComponent';
-
-const shimmer = keyframes`
-  0% {
-    transform: translateX(-40%);
-  }
-  50% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(40%);
-  }
-`;
+import { BookSearchFiltersPanel } from './BookSearchFiltersPanel';
+import { SearchResultsHeader } from './SearchResultsHeader';
+import { SearchResultsGrid } from './SearchResultsGrid';
+import { SearchEmptyState } from './SearchEmptyState';
 
 const quickTags = [
   'JavaScript',
@@ -221,211 +198,14 @@ export const BookSearchFormMUI = () => {
 
       {/* Filters Panel */}
       <Collapse in={filtersOpen} timeout={240} unmountOnExit>
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-            mb: 2,
-          }}
-        >
-          <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ mb: 1.5 }}
-            >
-              <Typography variant="h6" fontWeight={900}>
-                Filter
-              </Typography>
-              <Chip
-                label={
-                  filters.schlagwoerter.length
-                    ? `${filters.schlagwoerter.length} Tags aktiv`
-                    : 'Keine Tags'
-                }
-                color={filters.schlagwoerter.length ? 'primary' : 'default'}
-                variant={filters.schlagwoerter.length ? 'filled' : 'outlined'}
-                sx={{ borderRadius: 999 }}
-              />
-            </Stack>
-
-            <Divider sx={{ mb: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  label="ISBN"
-                  value={filters.isbn}
-                  onChange={(e) => setFilterValue('isbn', e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="art-label">Buchart</InputLabel>
-                  <Select
-                    labelId="art-label"
-                    label="Buchart"
-                    value={filters.art}
-                    onChange={(e) =>
-                      setFilterValue('art', e.target.value as BookArt)
-                    }
-                  >
-                    <MenuItem value="">Alle</MenuItem>
-                    <MenuItem value="EPUB">EPUB</MenuItem>
-                    <MenuItem value="HARDCOVER">HARDCOVER</MenuItem>
-                    <MenuItem value="PAPERBACK">PAPERBACK</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="sort-label">Sortierung</InputLabel>
-                  <Select
-                    labelId="sort-label"
-                    label="Sortierung"
-                    value={filters.sort}
-                    onChange={(e) => setFilterValue('sort', e.target.value)}
-                  >
-                    <MenuItem value="titel,asc">Titel A–Z</MenuItem>
-                    <MenuItem value="titel,desc">Titel Z–A</MenuItem>
-                    <MenuItem value="preis,asc">Preis aufsteigend</MenuItem>
-                    <MenuItem value="preis,desc">Preis absteigend</MenuItem>
-                    <MenuItem value="datum,desc">Neueste zuerst</MenuItem>
-                    <MenuItem value="datum,asc">Älteste zuerst</MenuItem>
-                    <MenuItem value="rating,desc">Beste Bewertung</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  label="Preis von (€)"
-                  type="number"
-                  value={filters.preisVon}
-                  onChange={(e) => setFilterValue('preisVon', e.target.value)}
-                  fullWidth
-                  slotProps={{ htmlInput: { min: 0 } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  label="Preis bis (€)"
-                  type="number"
-                  value={filters.preisBis}
-                  onChange={(e) => setFilterValue('preisBis', e.target.value)}
-                  fullWidth
-                  slotProps={{ htmlInput: { min: 0 } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  label="Rabatt ab"
-                  type="number"
-                  value={filters.rabattAb}
-                  onChange={(e) => setFilterValue('rabattAb', e.target.value)}
-                  fullWidth
-                  helperText="0–1 (z.B. 0.2 = 20%)"
-                  slotProps={{ htmlInput: { step: 0.05, min: 0, max: 1 } }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Stack spacing={1}>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="baseline"
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Mindestbewertung
-                    </Typography>
-                    <Typography variant="body2" fontWeight={800}>
-                      {filters.ratingMin} ★
-                    </Typography>
-                  </Stack>
-                  <Slider
-                    value={filters.ratingMin}
-                    min={0}
-                    max={5}
-                    step={1}
-                    valueLabelDisplay="auto"
-                    onChange={(_, v) =>
-                      setFilterValue('ratingMin', v as number)
-                    }
-                  />
-                </Stack>
-              </Grid>
-
-              <Grid
-                size={{ xs: 12, md: 6 }}
-                sx={{ display: 'flex', alignItems: 'center' }}
-              >
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={filters.lieferbar}
-                      onChange={(e) =>
-                        setFilterValue('lieferbar', e.target.checked)
-                      }
-                    />
-                  }
-                  label="Nur lieferbar"
-                />
-              </Grid>
-            </Grid>
-
-             <Grid
-                size={{ xs: 12, md: 6 }}
-                sx={{ display: 'flex', alignItems: 'center' }}
-              >
-                <FormControl>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Ansicht
-                  </Typography>
-                  <RadioGroup
-                    row
-                    value={viewMode}
-                    onChange={(e) => {
-                      setViewMode(e.target.value as 'cards' | 'list');
-                    }}
-                  >
-                    <FormControlLabel value="cards" control={<Radio />} label="Karten" />
-                    <FormControlLabel value="list" control={<Radio />} label="Liste" />
-                  </RadioGroup>
-                </FormControl>
-              </Grid>
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="subtitle2" fontWeight={900} sx={{ mb: 1 }}>
-              Quick-Tags
-            </Typography>
-
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-              {quickTags.map((tag) => {
-                const active = filters.schlagwoerter.includes(tag);
-                return (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    clickable
-                    onClick={() => toggleTag(tag)}
-                    color={active ? 'primary' : 'default'}
-                    variant={active ? 'filled' : 'outlined'}
-                    sx={{ mb: 1, borderRadius: 999 }}
-                  />
-                );
-              })}
-            </Stack>
-          </CardContent>
-        </Card>
+        <BookSearchFiltersPanel
+          filters={filters}
+          quickTags={quickTags}
+          viewMode={viewMode}
+          setFilterValue={setFilterValue}
+          toggleTag={toggleTag}
+          onViewModeChange={(mode) => setViewMode(mode)}
+        />
       </Collapse>
 
       {/* States */}
@@ -450,103 +230,24 @@ export const BookSearchFormMUI = () => {
       )}
 
       {!loading && !error && isEmpty && (
-        <Card
-          elevation={0}
-          sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}
-        >
-          <CardContent sx={{ py: 6 }}>
-            <Stack alignItems="center" spacing={1}>
-              <Typography variant="h6" fontWeight={900}>
-                Keine Bücher gefunden
-              </Typography>
-              <Typography
-                color="text.secondary"
-                align="center"
-                sx={{ maxWidth: 520 }}
-              >
-                Passe Suche, Filter oder Tags an und versuche es erneut.
-              </Typography>
-              <Button
-                onClick={handleReset}
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                sx={{ mt: 1, borderRadius: 2 }}
-              >
-                Filter zurücksetzen
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
+        <SearchEmptyState onReset={handleReset} />
       )}
 
       {/* Results */}
       {!loading && !error && visible.length > 0 && (
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6" fontWeight={900}>
-              Ergebnisse
-            </Typography>
-            <Stack direction="row" spacing={1} alignItems="center">
-              {loadingMore && <CircularProgress size={18} />}
-              <EntryCount
-                count={totalItems ?? visible.length}
-                label="Bücher"
-              />
-            </Stack>
-          </Stack>
+          <SearchResultsHeader
+            loadingMore={loadingMore}
+            totalItems={totalItems}
+            visibleCount={visible.length}
+          />
 
-          <Box
-            sx={(theme) => {
-              const shimmerGradient = `linear-gradient(120deg, ${alpha(
-                theme.palette.background.paper,
-                0,
-              )} 0%, ${alpha(
-                theme.palette.mode === 'dark'
-                  ? theme.palette.primary.dark
-                  : theme.palette.grey[200],
-                0.9,
-              )} 55%, ${alpha(theme.palette.background.paper, 0)} 100%)`;
-
-              return {
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: viewMode === 'cards' ? 3.5 : 1.5,
-                mt: 3,
-                ...(loadingMore && {
-                  '& .book-card': {
-                    position: 'relative',
-                    isolation: 'isolate',
-                    filter: 'grayscale(1) saturate(0.4) brightness(0.93)',
-                    opacity: 0.86,
-                    transition: 'filter 850ms ease, opacity 850ms ease',
-                  },
-                  '& .book-card::after': {
-                    content: '""',
-                    position: 'absolute',
-                    inset: 0,
-                    zIndex: 2,
-                    background: shimmerGradient,
-                    animation: `${shimmer} 2s ease-in-out infinite`,
-                    pointerEvents: 'none',
-                  },
-                }),
-              };
-            }}
-          >
-            {visible.map((book) => (
-              <Box
-                key={book.isbn}
-                onClick={() => setSelectedBook(book)}
-                sx={{ cursor: 'pointer', height: '100%' }}
-              >
-                <BookMediaMUI book={book} />
-              </Box>
-            ))}
-          </Box>
+          <SearchResultsGrid
+            books={visible}
+            loadingMore={loadingMore}
+            viewMode={viewMode}
+            onSelect={(book) => setSelectedBook(book)}
+          />
 
           <Stack
             spacing={0.75}
