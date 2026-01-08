@@ -1,0 +1,139 @@
+import { test, expect } from '@playwright/test';
+
+type Buch = {
+  id: number;
+  isbn: string;
+  titel: { titel: string; untertitel?: string };
+  art?: 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
+  preis?: number;
+  lieferbar?: boolean;
+  rabatt?: number;
+  rating?: number;
+  schlagwoerter?: string[];
+  datum?: string;
+  homepage?: string;
+};
+
+const books: Buch[] = [
+  {
+    id: 1,
+    isbn: '9780000000100',
+    titel: { titel: 'Admin Seed Book' },
+    art: 'PAPERBACK',
+    preis: 29.9,
+    lieferbar: true,
+    rabatt: 0.1,
+    rating: 4,
+    schlagwoerter: ['Seed'],
+    datum: '2024-01-10',
+    homepage: 'https://example.com/seed',
+  },
+  {
+    id: 2,
+    isbn: '9780000000200',
+    titel: { titel: 'Stats Book' },
+    art: 'HARDCOVER',
+    preis: 49.9,
+    lieferbar: false,
+    rating: 5,
+    datum: '2024-02-01',
+  },
+];
+
+const pageSize = 5;
+
+function buildResponse(items: Buch[], page: number) {
+  const totalPages = 1;
+  return {
+    content: items,
+    page: {
+      number: page,
+      size: pageSize,
+      totalElements: items.length,
+      totalPages,
+    },
+    totalPages,
+  };
+}
+
+test.describe('BookCreate', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const stored = {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh',
+        expiresAt: Date.now() + 60 * 60 * 1000,
+        roles: ['admin'],
+      };
+      localStorage.setItem('libria.auth', JSON.stringify(stored));
+    });
+
+    await page.route('**/rest**', async (route) => {
+      const request = route.request();
+      if (request.method() === 'POST') {
+        return route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
+      }
+
+      const url = new URL(request.url());
+      const pageParam = Number(url.searchParams.get('page') ?? '0');
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(buildResponse(books, pageParam)),
+      });
+    });
+
+    await page.goto('/admin');
+    await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible();
+  });
+
+  test('legt ein Buch an', async ({ page }) => {
+    await page.getByRole('button', { name: 'Buch anlegen' }).click();
+    await expect(page.getByRole('heading', { name: 'Buch anlegen' })).toBeVisible();
+
+    await page.getByLabel('ISBN-13').fill('9780306406157');
+    await page.getByLabel('Bewertung').fill('4');
+    await page.getByLabel('Preis').fill('12.99');
+    await page.getByLabel(/^Titel$/).fill('Playwright Buch');
+    await page.getByLabel('Untertitel (optional)').fill('UI Tests');
+
+    await page.getByLabel('Art (optional)').click();
+    await page.getByRole('option', { name: 'Paperback' }).click();
+
+    await page.getByLabel('Rabatt (optional)').fill('0.15');
+    await page.getByLabel('Lieferbar (optional)').check();
+    await page.getByLabel('Erscheinungsdatum (optional)').fill('2024-02-14');
+    await page.getByLabel('Homepage (optional)').fill('https://example.com/new');
+    await page.getByLabel('Abbildung Beschriftung').fill('Cover');
+    await page.getByLabel('Abbildung Content-Type').fill('image/png');
+
+    const createRequest = page.waitForRequest(
+      (request) => request.url().includes('/rest') && request.method() === 'POST',
+    );
+
+    await page.getByRole('button', { name: 'Anlegen' }).click();
+
+    const request = await createRequest;
+    const payload = request.postDataJSON() as Record<string, unknown>;
+
+    expect(payload).toMatchObject({
+      isbn: '9780306406157',
+      rating: 4,
+      preis: 12.99,
+      art: 'PAPERBACK',
+      rabatt: 0.15,
+      lieferbar: true,
+      homepage: 'https://example.com/new',
+      titel: { titel: 'Playwright Buch', untertitel: 'UI Tests' },
+      abbildungen: [{ beschriftung: 'Cover', contentType: 'image/png' }],
+    });
+    expect(payload.datum).toBe('2024-02-14T00:00:00.000Z');
+
+    await expect(page.getByRole('heading', { name: 'Alles erledigt' })).toBeVisible();
+    await expect(page.getByText('Playwright Buch erfolgreich angelegt.')).toBeVisible();
+  });
+});
