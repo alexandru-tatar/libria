@@ -78,6 +78,7 @@ type MockOptions = {
   pageSize?: number;
   onPost?: (route: Route, request: Request) => Promise<void> | void;
   onPut?: (route: Route, request: Request) => Promise<void> | void;
+  onDelete?: (route: Route, request: Request) => Promise<void> | void;
 };
 
 export const mockBooksApi = async (page: Page, options: MockOptions = {}) => {
@@ -106,6 +107,19 @@ export const mockBooksApi = async (page: Page, options: MockOptions = {}) => {
       }
       await route.fulfill({
         status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      });
+      return;
+    }
+
+    if (request.method() === 'DELETE') {
+      if (options.onDelete) {
+        await options.onDelete(route, request);
+        return;
+      }
+      await route.fulfill({
+        status: 204,
         contentType: 'application/json',
         body: JSON.stringify({}),
       });

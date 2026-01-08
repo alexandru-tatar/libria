@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedAdminAuth, mockBooksApi } from './utils/adminBooks';
+import { seedAdminAuth, mockBooksApi } from './utils/booksTest';
 
 test.describe('BookUpdate', () => {
   test.beforeEach(async ({ page }) => {
