@@ -1,34 +1,41 @@
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import type { FieldValues, Path } from 'react-hook-form';
+import type { BaseFieldProps } from './fieldProps';
 import { GenericField } from './GenericField';
 
-interface AbbildungFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
+type AbbildungFieldProps<T extends FieldValues> = BaseFieldProps<T> & {
+  index?: number;
+};
 
-export function AbbildungField<T extends FieldValues>(
-  props: AbbildungFieldProps<T>,
-) {
+export const AbbildungField = <T extends FieldValues>({
+  name,
+  control,
+  errors,
+  index = 0,
+}: AbbildungFieldProps<T>) => {
+  const prefix = `${String(name)}.${index}`;
+
   return (
     <>
       <GenericField
-        {...props}
+        name={`${prefix}.beschriftung` as Path<T>}
+        control={control}
+        errors={errors}
         label="Abbildung Beschriftung"
-        name={`${props.name}.0.beschriftung` as Path<T>}
         rules={{
           required: 'Beschriftung ist erforderlich',
           maxLength: { value: 32, message: 'Maximal 32 Zeichen' },
         }}
       />
+
       <GenericField
-        {...props}
+        name={`${prefix}.contentType` as Path<T>}
+        control={control}
+        errors={errors}
         label="Abbildung Content-Type"
-        name={`${props.name}.0.contentType` as Path<T>}
         rules={{
           maxLength: { value: 16, message: 'Maximal 16 Zeichen' },
         }}
       />
     </>
   );
-}
+};
