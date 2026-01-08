@@ -17,15 +17,14 @@ import {
   sortBooks,
   type Filters,
 } from '../domain/books/search';
+import { computeHasMore } from '../domain/books/paging';
+import {
+  extractBooks,
+  extractTotalPages,
+  type ApiResponse,
+} from '../infra/books/apiMapping';
+import { buildQueryParams } from '../infra/books/requests';
 export type { BookArt, Filters } from '../domain/books/search';
-
-type ApiResponse = {
-  _embedded?: { buecher?: BuchDTO[] };
-  content?: BuchDTO[];
-  page?: { totalPages?: number; totalElements?: number };
-  totalPages?: number;
-  totalElements?: number;
-};
 
 type FetchMode = 'replace' | 'append';
 
@@ -90,29 +89,6 @@ const isCanceledError = (error: unknown, signal: AbortSignal) =>
   (error instanceof DOMException && error.name === 'AbortError') ||
   (error instanceof Error && error.name === 'CanceledError');
 
-const extractBooks = (data: ApiResponse): BuchDTO[] => {
-  const embedded = data._embedded?.buecher;
-  if (Array.isArray(embedded)) return embedded;
-  if (Array.isArray(data.content)) return data.content;
-  return [];
-};
-
-const extractTotalPages = (data: ApiResponse): number => {
-  const fromPage = data.page?.totalPages;
-  if (typeof fromPage === 'number') return fromPage;
-  if (typeof data.totalPages === 'number') return data.totalPages;
-  return 0;
-};
-
-const buildQueryParams = (filters: Filters, pageSize: number) => {
-  const params: Record<string, string | number | boolean> = { size: pageSize };
-  if (filters.titel) params.titel = filters.titel;
-  if (filters.art) params.art = filters.art;
-  if (filters.lieferbar) params.lieferbar = true;
-  if (filters.schlagwoerter.length) params.schlagwoerter = filters.schlagwoerter.join(',');
-  return params;
-};
-
 export const useBookFilters = (initialFilters: Filters = defaultFilters) => {
   const [filters, setFilters] = useState<Filters>(initialFilters);
 
@@ -149,19 +125,19 @@ export const useBookSearch = (filters: Filters, pageSize: number) => {
   // React 18 - https://react.dev/reference/react/useTransition
   const [isPending, startTransition] = useTransition();
 
-  const hasMore = useMemo(() => {
-    if (state.lastBatchSize === 0) {
-      return false;
-    }
-    if (state.lastBatchSize !== undefined && state.lastBatchSize < pageSize) {
-      return false;
-    }
-    if (state.totalPages > 0) {
-      return state.page + 1 < state.totalPages;
-    }
-    const batchSize = state.lastBatchSize ?? pageSize;
-    return state.items.length >= batchSize;
-  }, [pageSize, state.items.length, state.lastBatchSize, state.page, state.totalPages]);
+  const hasMore = useMemo(
+    () =>
+      computeHasMore(
+        {
+          itemsLength: state.items.length,
+          lastBatchSize: state.lastBatchSize,
+          page: state.page,
+          totalPages: state.totalPages,
+        },
+        pageSize,
+      ),
+    [pageSize, state.items.length, state.lastBatchSize, state.page, state.totalPages],
+  );
 
   const beginFetch = useCallback((mode: FetchMode) => {
     setState((prev) => {
