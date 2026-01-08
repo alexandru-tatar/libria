@@ -33,16 +33,16 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 
-import { BookMediaMUI } from './MediaMUI';
-import { LoadMoreBar } from './LoadMoreBar';
+import { BookMediaMUI } from '../MediaComponent';
+import { LoadMoreBar } from './LoadMoreBarComponent';
 import {
   type BookArt,
   useBookFilters,
   useBookSearch,
-} from '../hooks/useBookSearch';
-import type { BookItems } from '../types/book';
-import { BookDetail } from './BookDetail';
-import { EntryCount } from './EntryCount';
+} from '../../hooks/useBookSearch';
+import type { BookItems } from '../../types/book';
+import { BookDetail } from './BookDetailComponent';
+import { EntryCount } from '../EntryCountComponent';
 
 const shimmer = keyframes`
   0% {
@@ -513,10 +513,7 @@ export const BookSearchFormMUI = () => {
 
               return {
                 display: 'grid',
-                gridTemplateColumns:
-                  viewMode === 'cards'
-                    ? 'repeat(auto-fit, minmax(260px, 1fr))'
-                    : '1fr',
+                gridTemplateColumns: '1fr',
                 gap: viewMode === 'cards' ? 3.5 : 1.5,
                 mt: 3,
                 ...(loadingMore && {

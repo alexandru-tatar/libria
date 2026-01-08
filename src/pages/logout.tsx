@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { PostLogoutLogo } from '../components/PostLogoutLogo';
+import { PostLogoutLogo } from '../components/PostLogoutLogoComponent';
 
 function LogoutPage() {
   const { logout } = useAuth();

@@ -16,7 +16,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../auth/useAuth';
-import { PostLoginLogo } from '../components/PostLoginLogo';
+import { PostLoginLogo } from '../components/PostLoginLogoComponent';
 
 function Login() {
   const { isAuthenticated, login, loading } = useAuth();

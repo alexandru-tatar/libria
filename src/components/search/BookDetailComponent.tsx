@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Box, Typography, Stack, Divider, Chip } from '@mui/material';
-import type { BookItems } from '../types/book';
+import type { BookItems } from '../../types/book';
 
 export const BookDetail = ({
   book,
