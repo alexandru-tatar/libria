@@ -3,9 +3,6 @@ import {
   Avatar,
   Box,
   Card,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Typography,
   useTheme,
@@ -17,56 +14,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import PercentIcon from '@mui/icons-material/Percent';
 import StarIcon from '@mui/icons-material/Star';
 import { defaultFilters, useBookSearch } from '../../hooks/useBookSearch';
-import type { Book } from '../../types/book';
 import './BookStatistics.css';
-
-const toTime = (value?: unknown): number => {
-  if (!value) {
-    return 0;
-  }
-
-  if (value instanceof Date) {
-    return value.getTime();
-  }
-
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (typeof value !== 'string') {
-    return 0;
-  }
-
-  const dateStr = value.trim();
-  if (!dateStr) {
-    return 0;
-  }
-
-  const isGermanDate = /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateStr);
-  if (isGermanDate) {
-    const [dayStr, monthStr, yearStr] = dateStr.split('.');
-    const day = parseInt(dayStr ?? '', 10);
-    const month = parseInt(monthStr ?? '', 10);
-    const year = parseInt(yearStr ?? '', 10);
-
-    if (Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)) {
-      return new Date(year, month - 1, day).getTime();
-    }
-
-    return 0;
-  }
-
-  const time = Date.parse(dateStr);
-  return Number.isFinite(time) ? time : 0;
-};
-
-const formatDate = (value?: unknown): string => {
-  const time = toTime(value);
-  if (!time) {
-    return typeof value === 'string' ? value : '';
-  }
-  return new Date(time).toLocaleDateString('de-DE');
-};
 
 export const BookStatistics: React.FC = () => {
   const theme = useTheme();
@@ -85,13 +33,6 @@ export const BookStatistics: React.FC = () => {
       loadMore();
     }
   }, [hasMore, loading, loadMore]);
-
-  const latestBooks = useMemo((): Book[] => {
-    return [...books]
-      .filter(({ datum }) => Boolean(datum))
-      .sort((a, b) => toTime(b.datum) - toTime(a.datum))
-      .slice(0, 5);
-  }, [books]);
 
   const anzahl = books.length;
 
@@ -137,7 +78,7 @@ export const BookStatistics: React.FC = () => {
   const stats = [
     {
       label: 'Gefundene Bücher',
-      value: anzahl,
+      value: anzahlText,
       icon: <LocalLibraryIcon fontSize='medium' />,
       color: theme.palette.primary.main,
       valueColor: theme.palette.primary.main,
@@ -163,21 +104,21 @@ export const BookStatistics: React.FC = () => {
     },
     {
       label: 'Lieferbar',
-      value: lieferbar,
+      value: `${lieferbar}`,
       icon: <LocalShippingIcon fontSize='medium' />,
       color: theme.palette.info.main,
       valueColor: theme.palette.info.main,
     },
     {
       label: 'Nicht lieferbar',
-      value: nichtLieferbar,
+      value: `${nichtLieferbar}`,
       icon: <BlockIcon fontSize='medium' />,
       color: theme.palette.error.main,
       valueColor: theme.palette.error.main,
     },
     {
       label: 'Bücher mit Rabatt',
-      value: mitRabatt,
+      value: `${mitRabatt}`,
       icon: <PercentIcon fontSize='medium' />,
       color: theme.palette.secondary.main,
       valueColor: theme.palette.secondary.main,
@@ -199,7 +140,7 @@ export const BookStatistics: React.FC = () => {
       </Stack>
 
       <Typography variant='subtitle1' fontWeight={700} className='bookStatsCount'>
-        Gefundene Bücher: {anzahlText}
+        {`Gefundene Bücher: ${anzahlText}`}
       </Typography>
 
       <Box className='bookStatsGrid'>
@@ -257,21 +198,6 @@ export const BookStatistics: React.FC = () => {
           </Card>
         ))}
       </Box>
-
-      <Typography variant='subtitle1' fontWeight={700} className='bookStatsLatestTitle'>
-        Die 5 zuletzt hinzugefügten Bücher
-      </Typography>
-
-      <List dense>
-        {latestBooks.map(({ id, titel, datum }) => (
-          <ListItem key={id} disableGutters>
-            <ListItemText
-              primary={<span style={{ fontWeight: 600 }}>{titel?.titel}</span>}
-              secondary={datum ? formatDate(datum) : ''}
-            />
-          </ListItem>
-        ))}
-      </List>
     </Box>
   );
 };
