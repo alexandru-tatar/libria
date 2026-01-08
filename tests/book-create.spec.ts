@@ -1,91 +1,10 @@
 import { test, expect } from '@playwright/test';
-
-type Buch = {
-  id: number;
-  isbn: string;
-  titel: { titel: string; untertitel?: string };
-  art?: 'EPUB' | 'HARDCOVER' | 'PAPERBACK';
-  preis?: number;
-  lieferbar?: boolean;
-  rabatt?: number;
-  rating?: number;
-  schlagwoerter?: string[];
-  datum?: string;
-  homepage?: string;
-};
-
-const books: Buch[] = [
-  {
-    id: 1,
-    isbn: '9780000000100',
-    titel: { titel: 'Admin Seed Book' },
-    art: 'PAPERBACK',
-    preis: 29.9,
-    lieferbar: true,
-    rabatt: 0.1,
-    rating: 4,
-    schlagwoerter: ['Seed'],
-    datum: '2024-01-10',
-    homepage: 'https://example.com/seed',
-  },
-  {
-    id: 2,
-    isbn: '9780000000200',
-    titel: { titel: 'Stats Book' },
-    art: 'HARDCOVER',
-    preis: 49.9,
-    lieferbar: false,
-    rating: 5,
-    datum: '2024-02-01',
-  },
-];
-
-const pageSize = 5;
-
-function buildResponse(items: Buch[], page: number) {
-  const totalPages = 1;
-  return {
-    content: items,
-    page: {
-      number: page,
-      size: pageSize,
-      totalElements: items.length,
-      totalPages,
-    },
-    totalPages,
-  };
-}
+import { seedAdminAuth, mockBooksApi } from './utils/adminBooks';
 
 test.describe('BookCreate', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      const stored = {
-        accessToken: 'test-token',
-        refreshToken: 'test-refresh',
-        expiresAt: Date.now() + 60 * 60 * 1000,
-        roles: ['admin'],
-      };
-      localStorage.setItem('libria.auth', JSON.stringify(stored));
-    });
-
-    await page.route('**/rest**', async (route) => {
-      const request = route.request();
-      if (request.method() === 'POST') {
-        return route.fulfill({
-          status: 201,
-          contentType: 'application/json',
-          body: JSON.stringify({}),
-        });
-      }
-
-      const url = new URL(request.url());
-      const pageParam = Number(url.searchParams.get('page') ?? '0');
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(buildResponse(books, pageParam)),
-      });
-    });
+    await seedAdminAuth(page);
+    await mockBooksApi(page);
 
     await page.goto('/admin');
     await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible();
