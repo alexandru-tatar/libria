@@ -1,22 +1,26 @@
-import type {
-  FieldValues,
-  Control,
-  FieldErrors,
-  Path,
-  RegisterOptions,
-  FieldError,
-} from 'react-hook-form';
+import type { FieldValues, Path, RegisterOptions } from 'react-hook-form';
 import { Controller } from 'react-hook-form';
-import { TextField, MenuItem, FormControlLabel, Checkbox } from '@mui/material';
+import type { Control, FieldErrors } from 'react-hook-form';
+import {
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  TextField,
+} from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import { getErrorByPath } from './formErrors';
 
-type Option = { value: string; label: string };
+export type Option = {
+  value: string;
+  label: string;
+};
 
-interface GenericFieldProps<T extends FieldValues> {
+export type GenericFieldProps<T extends FieldValues> = {
   name: Path<T>;
   control: Control<T>;
   errors?: FieldErrors<T>;
-  label?: string;
+  label: string;
+  required?: boolean;
   placeholder?: string;
   type?: string;
   select?: boolean;
@@ -24,41 +28,14 @@ interface GenericFieldProps<T extends FieldValues> {
   helperText?: string;
   sx?: SxProps<Theme>;
   rules?: RegisterOptions<T, Path<T>>;
-}
+};
 
-function getErrorByPath<T extends FieldValues>(
-  errors: FieldErrors<T> | undefined,
-  path: Path<T> | string,
-): FieldError | undefined {
-  if (!errors) return undefined;
-  const parts = String(path).split('.');
-  let current: unknown = errors;
-  for (const part of parts) {
-    if (
-      current &&
-      typeof current === 'object' &&
-      Object.prototype.hasOwnProperty.call(current, part)
-    ) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return undefined;
-    }
-  }
-  if (
-    current &&
-    typeof current === 'object' &&
-    'message' in (current as Record<string, unknown>)
-  ) {
-    return current as FieldError;
-  }
-  return undefined;
-}
-
-export function GenericField<T extends FieldValues>({
+export const GenericField = <T extends FieldValues>({
   name,
   control,
   errors,
   label,
+  required,
   placeholder,
   type,
   select,
@@ -66,9 +43,10 @@ export function GenericField<T extends FieldValues>({
   helperText,
   sx,
   rules,
-}: GenericFieldProps<T>) {
-  const key = String(name);
-  const fieldError = getErrorByPath<T>(errors, key);
+}: GenericFieldProps<T>) => {
+  const fieldError = getErrorByPath<T>(errors, String(name));
+
+  const labelText = required ? `${label} *` : label;
 
   return (
     <Controller
@@ -79,14 +57,14 @@ export function GenericField<T extends FieldValues>({
         if (type === 'checkbox') {
           return (
             <FormControlLabel
+              sx={sx}
+              label={label}
               control={
                 <Checkbox
                   checked={Boolean(field.value)}
-                  onChange={(e) => field.onChange(e.target.checked)}
+                  onChange={(event) => field.onChange(event.target.checked)}
                 />
               }
-              label={label}
-              sx={sx}
             />
           );
         }
@@ -94,22 +72,23 @@ export function GenericField<T extends FieldValues>({
         return (
           <TextField
             {...field}
-            value={field.value ?? ''}
-            onChange={(e) => field.onChange(e.target.value)}
-            select={Boolean(select)}
-            label={label}
+            sx={sx}
+            fullWidth
+            label={labelText}
+            required={false}
             placeholder={placeholder}
             type={type}
-            fullWidth
+            select={Boolean(select)}
+            value={field.value ?? ''}
+            onChange={(event) => field.onChange(event.target.value)}
             error={Boolean(fieldError)}
             helperText={fieldError?.message ?? helperText}
             InputLabelProps={type === 'date' ? { shrink: true } : undefined}
-            sx={sx}
           >
             {select &&
-              options?.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              (options ?? []).map(({ value, label: optionLabel }) => (
+                <MenuItem key={value} value={value}>
+                  {optionLabel}
                 </MenuItem>
               ))}
           </TextField>
@@ -117,5 +96,4 @@ export function GenericField<T extends FieldValues>({
       }}
     />
   );
-}
-
+};

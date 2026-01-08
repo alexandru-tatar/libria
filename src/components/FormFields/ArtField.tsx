@@ -1,38 +1,33 @@
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import type { FieldValues } from 'react-hook-form';
+import type { BaseFieldProps } from './fieldProps';
 import { GenericField } from './GenericField';
 
-interface ArtFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
-
 const ART_OPTIONS = [
+  { value: '', label: 'Keine Auswahl' },
   { value: 'EPUB', label: 'EPUB' },
   { value: 'HARDCOVER', label: 'Hardcover' },
   { value: 'PAPERBACK', label: 'Paperback' },
 ];
 
-export function ArtField<T extends FieldValues>({
+export const ArtField = <T extends FieldValues>({
   name,
   control,
   errors,
-}: ArtFieldProps<T>) {
+}: BaseFieldProps<T>) => {
   return (
     <GenericField
       name={name}
       control={control}
       errors={errors}
-      label="Art (optional)"
+      label="Art"
       select
       options={ART_OPTIONS}
-      placeholder="Wähle eine Art"
       rules={{
         validate: (value?: string) =>
           !value ||
-          ART_OPTIONS.some((opt) => opt.value === value) ||
+          ART_OPTIONS.some(({ value: v }) => v === value) ||
           'Ungültige Art',
       }}
     />
   );
-}
+};

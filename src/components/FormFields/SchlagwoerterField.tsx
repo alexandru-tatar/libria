@@ -1,42 +1,57 @@
-// ...existing code...
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
-import { GenericField } from './GenericField';
+import type { FieldValues, Path } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
+import { TextField } from '@mui/material';
+import type { BaseFieldProps } from './fieldProps';
+import { getErrorByPath } from './formErrors';
 
-interface SchlagwoerterFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
+const parseTags = (raw: string): string[] =>
+  raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-export function SchlagwoerterField<T extends FieldValues>({
+const stringifyTags = (tags: string[] | undefined): string =>
+  (tags ?? []).join(', ');
+
+export const SchlagwoerterField = <T extends FieldValues>({
   name,
   control,
   errors,
-}: SchlagwoerterFieldProps<T>) {
+}: BaseFieldProps<T>) => {
+  const fieldError = getErrorByPath<T>(errors, String(name));
+
   return (
-    <GenericField
-      name={name}
+    <Controller
+      name={name as Path<T>}
       control={control}
-      errors={errors}
-      label="Schlagwörter (optional)"
-      placeholder="Mehrere durch Komma trennen"
       rules={{
-        validate: (value?: string | string[]) => {
-          if (!value || (Array.isArray(value) && value.length === 0))
-            return true;
-          const arr = Array.isArray(value)
-            ? value
-            : String(value)
-                .split(',')
-                .map((s) => s.trim())
-                .filter(Boolean);
-          if (arr.some((w) => w.length > 32))
-            return 'Jedes Schlagwort max. 32 Zeichen';
-          return true;
+        validate: (value: unknown) => {
+          const tags = Array.isArray(value)
+            ? (value as string[])
+            : parseTags(String(value ?? ''));
+
+          const tooLong = tags.some((w) => w.length > 32);
+          return tooLong ? 'Jedes Schlagwort max. 32 Zeichen' : true;
         },
       }}
-      helperText="z.B. JAVASCRIPT, TYPESCRIPT"
+      render={({ field }) => {
+        const tagsArray = Array.isArray(field.value)
+          ? (field.value as string[])
+          : [];
+
+        return (
+          <TextField
+            fullWidth
+            label="Schlagwörter (optional)"
+            placeholder="Mehrere durch Komma trennen"
+            value={stringifyTags(tagsArray)}
+            onBlur={field.onBlur}
+            onChange={(event) => field.onChange(parseTags(event.target.value))}
+            error={Boolean(fieldError)}
+            helperText={fieldError?.message ?? 'z.B. JAVASCRIPT, TYPESCRIPT'}
+          />
+        );
+      }}
     />
   );
-}
-// ...existing code...
+};

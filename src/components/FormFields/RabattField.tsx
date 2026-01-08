@@ -1,31 +1,29 @@
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import type { FieldValues } from 'react-hook-form';
+import type { BaseFieldProps } from './fieldProps';
 import { GenericField } from './GenericField';
 
-interface RabattFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
-
-export function RabattField<T extends FieldValues>({
+export const RabattField = <T extends FieldValues>({
   name,
   control,
   errors,
-}: RabattFieldProps<T>) {
+}: BaseFieldProps<T>) => {
   return (
     <GenericField
       name={name}
       control={control}
       errors={errors}
-      label="Rabatt (optional)"
+      label="Rabatt"
       type="number"
+      helperText="0–1 (z.B. 0.2 = 20%)"
       rules={{
-        min: { value: 0, message: 'Rabatt muss positiv sein' },
-        max: { value: 1, message: 'Rabatt muss kleiner 1 sein' },
+        min: { value: 0, message: 'Rabatt muss ≥ 0 sein' },
+        max: { value: 1, message: 'Rabatt muss ≤ 1 sein' },
         validate: (value) =>
+          value === '' ||
+          value == null ||
           /^\d{1}(\.\d{1,3})?$/.test(String(value)) ||
-          'Maximal 4 Stellen, 3 Nachkommastellen',
+          'Format z.B. 0.2 (max. 3 Nachkommastellen)',
       }}
     />
   );
-}
+};

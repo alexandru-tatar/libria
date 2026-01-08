@@ -1,23 +1,19 @@
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import type { FieldValues } from 'react-hook-form';
+import type { BaseFieldProps } from './fieldProps';
 import { GenericField } from './GenericField';
 
-interface RatingFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
-
-export function RatingField<T extends FieldValues>({
+export const RatingField = <T extends FieldValues>({
   name,
   control,
   errors,
-}: RatingFieldProps<T>) {
+}: BaseFieldProps<T>) => {
   return (
     <GenericField
       name={name}
       control={control}
       errors={errors}
       label="Bewertung"
+      required
       type="number"
       rules={{
         required: 'Bewertung ist erforderlich',
@@ -26,4 +22,4 @@ export function RatingField<T extends FieldValues>({
       }}
     />
   );
-}
+};

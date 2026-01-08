@@ -1,24 +1,19 @@
-import type { FieldValues, Control, FieldErrors, Path } from 'react-hook-form';
+import type { FieldValues } from 'react-hook-form';
+import type { BaseFieldProps } from './fieldProps';
 import { GenericField } from './GenericField';
 
-interface LieferbarFieldProps<T extends FieldValues> {
-  name: Path<T>;
-  control: Control<T>;
-  errors: FieldErrors<T>;
-}
-
-export function LieferbarField<T extends FieldValues>({
+export const LieferbarField = <T extends FieldValues>({
   name,
   control,
   errors,
-}: LieferbarFieldProps<T>) {
+}: BaseFieldProps<T>) => {
   return (
     <GenericField
       name={name}
       control={control}
       errors={errors}
-      label="Lieferbar (optional)"
+      label="Lieferbar"
       type="checkbox"
     />
   );
-}
+};
