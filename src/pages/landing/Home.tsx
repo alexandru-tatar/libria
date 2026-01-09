@@ -15,7 +15,11 @@ export default function Home() {
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
       <Container maxWidth="md" sx={{ py: 8 }}>
         <Stack spacing={3}>
-          <Typography variant="overline" color="text.secondary" letterSpacing={1}>
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            letterSpacing={1}
+          >
             Libria
           </Typography>
 
@@ -24,7 +28,8 @@ export default function Home() {
               Willkommen bei Libria
             </Typography>
             <Typography color="text.secondary">
-              Entspannt stöbern, schnell finden und sicher verwalten – alles in einer Oberfläche.
+              Entspannt stöbern, schnell finden und sicher verwalten – alles in
+              einer Oberfläche.
             </Typography>
           </Stack>
 

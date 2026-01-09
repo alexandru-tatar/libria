@@ -15,7 +15,11 @@ export const SearchEmptyState = ({ onReset }: Props) => (
         <Typography variant="h6" fontWeight={900}>
           Keine Bücher gefunden
         </Typography>
-        <Typography color="text.secondary" align="center" sx={{ maxWidth: 520 }}>
+        <Typography
+          color="text.secondary"
+          align="center"
+          sx={{ maxWidth: 520 }}
+        >
           Passe Suche, Filter oder Tags an und versuche es erneut.
         </Typography>
         <Button

@@ -25,10 +25,7 @@ type Props = {
   filters: Filters;
   quickTags: string[];
   viewMode: ViewMode;
-  setFilterValue: <K extends keyof Filters>(
-    key: K,
-    value: Filters[K],
-  ) => void;
+  setFilterValue: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
   toggleTag: (tag: string) => void;
   onViewModeChange: (mode: ViewMode) => void;
 };
@@ -91,9 +88,7 @@ export const BookSearchFiltersPanel = ({
               labelId="art-label"
               label="Buchart"
               value={filters.art}
-              onChange={(e) =>
-                setFilterValue('art', e.target.value as BookArt)
-              }
+              onChange={(e) => setFilterValue('art', e.target.value as BookArt)}
             >
               <MenuItem value="">Alle</MenuItem>
               <MenuItem value="EPUB">EPUB</MenuItem>
@@ -159,7 +154,11 @@ export const BookSearchFiltersPanel = ({
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Stack spacing={1}>
-            <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="baseline"
+            >
               <Typography variant="body2" color="text.secondary">
                 Mindestbewertung
               </Typography>
@@ -178,7 +177,10 @@ export const BookSearchFiltersPanel = ({
           </Stack>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
           <FormControlLabel
             control={
               <Switch
@@ -190,7 +192,10 @@ export const BookSearchFiltersPanel = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
           <FormControl>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
               Ansicht
@@ -200,8 +205,16 @@ export const BookSearchFiltersPanel = ({
               value={viewMode}
               onChange={(e) => onViewModeChange(e.target.value as ViewMode)}
             >
-              <FormControlLabel value="cards" control={<Radio />} label="Karten" />
-              <FormControlLabel value="list" control={<Radio />} label="Liste" />
+              <FormControlLabel
+                value="cards"
+                control={<Radio />}
+                label="Karten"
+              />
+              <FormControlLabel
+                value="list"
+                control={<Radio />}
+                label="Liste"
+              />
             </RadioGroup>
           </FormControl>
         </Grid>
