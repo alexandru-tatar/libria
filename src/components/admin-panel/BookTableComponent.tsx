@@ -15,6 +15,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useEffect, useState } from 'react';
+import type { UIEvent } from 'react';
 import { useBookSearch, defaultFilters } from '../../hooks/useBookSearch';
 import { useBookDelete } from '../../hooks/useBookDelete';
 import type { Filters } from '../../hooks/useBookSearch';
@@ -32,7 +33,7 @@ const cell = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-};
+} as const;
 
 export function BookTable({
   filters = defaultFilters,
@@ -46,36 +47,38 @@ export function BookTable({
   const { deleteBook, loading: deleting } = useBookDelete();
 
   const [editingBook, setEditingBook] = useState<BuchDTO | null>(null);
-  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => onCountChange?.(visible.length), [visible.length, onCountChange]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     if (scrollTop + clientHeight >= scrollHeight - 10 && hasMore) loadMore();
   };
 
-  const formatDate = (d?: string) =>
-    d ? d.split('T')[0].split('-').reverse().join('.') : '-';
+  const formatDate = (iso?: string) =>
+    iso ? new Date(iso).toLocaleDateString('de-DE') : '-';
 
-  const handleDelete = (id: number) => {
-    deleteBook(id).then(() => refetch());
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteBook(id);
+      refetch();
+    } catch (err) {
+      console.error('BookTable.handleDelete error', err);
+    }
   };
 
   const handleEditClick = (b: BuchDTO) => {
-    if (b.version === undefined || b.version === null) {
+    if (b.version == null) {
       console.error('Keine Versionsnummer am Buch gefunden.');
     }
     setEditingBook(b);
-    setEditingVersion(b.version ?? null);
     setDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
     setEditingBook(null);
-    setEditingVersion(null);
   };
 
   return (
@@ -107,22 +110,27 @@ export function BookTable({
               {visible.map((b: BuchDTO) => (
                 <TableRow key={b.isbn} sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
                   <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
+
                   <TableCell sx={{ ...cell, maxWidth: 150 }}>
                     <Tooltip title={b.titel?.titel ?? '-'}>
                       <span>{b.titel?.titel ?? '-'}</span>
                     </Tooltip>
                   </TableCell>
+
                   <TableCell sx={cell}>{b.art}</TableCell>
                   <TableCell sx={cell}>{b.preis ?? '-'}</TableCell>
                   <TableCell sx={cell}>{b.rabatt ?? '-'}</TableCell>
                   <TableCell sx={cell}>{b.rating ?? '-'}</TableCell>
                   <TableCell sx={cell}>{b.lieferbar ? 'Ja' : 'Nein'}</TableCell>
+
                   <TableCell sx={{ ...cell, maxWidth: 120 }}>
                     <Tooltip title={b.schlagwoerter?.join(', ') ?? '-'}>
                       <span>{b.schlagwoerter?.join(', ') ?? '-'}</span>
                     </Tooltip>
                   </TableCell>
+
                   <TableCell sx={cell}>{formatDate(b.datum)}</TableCell>
+
                   <TableCell
                     sx={{
                       ...cell,
@@ -146,7 +154,6 @@ export function BookTable({
                     </Tooltip>
 
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      {/* Bearbeiten-Button */}
                       <Tooltip title="Bearbeiten">
                         <IconButton
                           size="small"
@@ -157,13 +164,12 @@ export function BookTable({
                         </IconButton>
                       </Tooltip>
 
-                      {/* Löschen-Button */}
                       <Tooltip title="Löschen">
                         <IconButton
                           size="small"
                           color="error"
                           disabled={deleting}
-                          onClick={() => handleDelete(b.id)}
+                          onClick={() => void handleDelete(b.id)}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -189,12 +195,11 @@ export function BookTable({
         )}
       </Paper>
 
-      {/* BookManagement-Dialog zum Bearbeiten */}
       <BookManagement
         open={dialogOpen}
         onClose={handleDialogClose}
         initialData={editingBook ?? undefined}
-        version={editingVersion ?? undefined}
+        version={editingBook?.version ?? undefined}
         onSuccess={refetch}
       />
     </>
@@ -202,9 +207,3 @@ export function BookTable({
 }
 
 export default BookTable;
-
-
-
-
-
-
