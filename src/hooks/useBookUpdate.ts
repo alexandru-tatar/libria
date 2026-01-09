@@ -28,18 +28,18 @@ export function useBookUpdate() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  /**
-   * Aktualisiert ein vorhandenes Buch.
-   * @param id ID des Buches, das geaendert werden soll
-   * @param payload Neue Daten des Buches
-   * @param version Versionsnummer fuer If-Match
-   * @returns true bei Erfolg, false bei Fehler
-   */
-  const updateBook = async (id: string, payload: BuchDTO, version?: number) => {
+  const updateBook = async (
+    id: string,
+    payload: BuchDTO,
+    version?: number,
+  ): Promise<boolean> => {
     setSubmitting(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+
     try {
-      if (version === undefined || version === null) {
-        setErrorMsg('Keine Versionsnummer vorhanden. Bitte erneut oeffnen und versuchen.');
+      if (version == null) {
+        setErrorMsg('Keine Versionsnummer vorhanden. Bitte erneut öffnen und versuchen.');
         return false;
       }
 

@@ -8,8 +8,11 @@ export function useBookCreate() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const createBook = async (payload: BuchDTO) => {
+  const createBook = async (payload: BuchDTO): Promise<boolean> => {
     setSubmitting(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+
     try {
       await api.post('/', payload);
       setSuccessMsg(buildSuccessMessage(payload, 'angelegt'));
