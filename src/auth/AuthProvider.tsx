@@ -17,10 +17,54 @@ const REALM = import.meta.env.VITE_KEYCLOAK_REALM;
 const CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET;
 const OPENID_SCOPE = 'openid profile email';
-
 const TOKEN_URL = `${KEYCLOAK_BASE}/realms/${REALM}/protocol/openid-connect/token`;
 const USERINFO_URL = `${KEYCLOAK_BASE}/realms/${REALM}/protocol/openid-connect/userinfo`;
 const LOGOUT_URL = `${KEYCLOAK_BASE}/realms/${REALM}/protocol/openid-connect/logout`;
+const INVALID_CREDENTIALS_MSG =
+  'Anmeldung fehlgeschlagen.\nBenutzername oder Passwort ist nicht korrekt.';
+
+const GENERIC_AUTH_MSG = 'Anmeldung fehlgeschlagen.';
+
+
+type TokenErrorPayload = {
+  error?: string;
+  error_description?: string;
+};
+
+const parseTokenErrorPayload = (text: string): TokenErrorPayload | null => {
+  const t = text.trim();
+  if (!t || (!t.startsWith('{') && !t.startsWith('['))) return null;
+
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+};
+
+
+
+const buildAuthErrorMessage = (raw: string) => {
+  const text = raw.trim();
+  if (!text) return GENERIC_AUTH_MSG;
+
+  const lower = text.toLowerCase();
+  const payload = parseTokenErrorPayload(text);
+  const desc = payload?.error_description?.toLowerCase();
+
+  const isInvalid =
+    lower.includes('invalid_grant') ||
+    lower.includes('invalid user credentials') ||
+    payload?.error === 'invalid_grant' ||
+    desc?.includes('invalid user credentials');
+
+  if (isInvalid) return INVALID_CREDENTIALS_MSG;
+
+  // keine technischen Texte ins UI leaken
+  if (lower.includes('failed to fetch')) return GENERIC_AUTH_MSG;
+
+  return GENERIC_AUTH_MSG;
+};
 
 type StoredAuth = {
   accessToken: string;
@@ -69,7 +113,7 @@ async function requestToken(body: URLSearchParams): Promise<TokenResponse> {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(errText || 'Authentifizierung fehlgeschlagen');
+    throw new Error(buildAuthErrorMessage(errText));
   }
 
   return res.json() as Promise<TokenResponse>;
