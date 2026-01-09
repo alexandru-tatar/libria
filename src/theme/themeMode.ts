@@ -7,10 +7,13 @@ export type ThemeModeContextValue = {
     setMode: (mode: PaletteMode) => void;
 };
 
-export const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefined);
+export const ThemeModeContext = createContext<
+    ThemeModeContextValue | undefined
+>(undefined);
 
 export function useThemeMode() {
     const ctx = useContext(ThemeModeContext);
-    if (!ctx) throw new Error('useThemeMode must be used inside ThemeModeProvider');
+    if (!ctx)
+        throw new Error('useThemeMode must be used inside ThemeModeProvider');
     return ctx;
 }

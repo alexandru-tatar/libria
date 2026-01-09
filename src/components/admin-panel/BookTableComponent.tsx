@@ -49,7 +49,10 @@ export function BookTable({
   const [editingBook, setEditingBook] = useState<BuchDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => onCountChange?.(visible.length), [visible.length, onCountChange]);
+  useEffect(
+    () => onCountChange?.(visible.length),
+    [visible.length, onCountChange],
+  );
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -108,7 +111,10 @@ export function BookTable({
             </TableHead>
             <TableBody>
               {visible.map((b: BuchDTO) => (
-                <TableRow key={b.isbn} sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
+                <TableRow
+                  key={b.isbn}
+                  sx={{ '& .MuiTableCell-root': { py: 0.5 } }}
+                >
                   <TableCell sx={{ px: 1 }}>{b.isbn}</TableCell>
 
                   <TableCell sx={{ ...cell, maxWidth: 150 }}>

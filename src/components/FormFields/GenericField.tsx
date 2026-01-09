@@ -1,12 +1,7 @@
 import type { FieldValues, Path, RegisterOptions } from 'react-hook-form';
 import { Controller } from 'react-hook-form';
 import type { Control, FieldErrors } from 'react-hook-form';
-import {
-  Checkbox,
-  FormControlLabel,
-  MenuItem,
-  TextField,
-} from '@mui/material';
+import { Checkbox, FormControlLabel, MenuItem, TextField } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import { getErrorByPath } from './formErrors';
 

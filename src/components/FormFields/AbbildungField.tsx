@@ -20,9 +20,7 @@ type AbbildungItem = {
   contentType: string;
 };
 
-const CONTENT_TYPE_OPTIONS: string[] = [
-  'image/png',
-];
+const CONTENT_TYPE_OPTIONS: string[] = ['image/png'];
 
 export const AbbildungField = <T extends FieldValues>({
   name,
@@ -64,7 +62,8 @@ export const AbbildungField = <T extends FieldValues>({
       </Stack>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Optional. Wenn du eine Abbildung hinzufügst, sind Beschriftung und Content-Type Pflicht.
+        Optional. Wenn du eine Abbildung hinzufügst, sind Beschriftung und
+        Content-Type Pflicht.
       </Typography>
 
       {!hasItems ? null : (
@@ -77,10 +76,7 @@ export const AbbildungField = <T extends FieldValues>({
               errors,
               beschriftungPath,
             );
-            const contentTypeError = getErrorByPath<T>(
-              errors,
-              contentTypePath,
-            );
+            const contentTypeError = getErrorByPath<T>(errors, contentTypePath);
 
             return (
               <Box

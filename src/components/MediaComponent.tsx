@@ -64,10 +64,7 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
         ),
         color: theme.palette.text.primary,
         boxShadow: cardShadow,
-        border: `1px solid ${alpha(
-          theme.palette.divider,
-          isDark ? 0.6 : 0.9,
-        )}`,
+        border: `1px solid ${alpha(theme.palette.divider, isDark ? 0.6 : 0.9)}`,
         width: '100%',
         maxWidth: '100%',
         transition: 'transform 150ms ease, box-shadow 150ms ease',
@@ -230,10 +227,7 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={`ISBN ${isbn}`}
               size="small"
               sx={{
-                bgcolor: alpha(
-                  theme.palette.text.primary,
-                  isDark ? 0.2 : 0.06,
-                ),
+                bgcolor: alpha(theme.palette.text.primary, isDark ? 0.2 : 0.06),
                 color: theme.palette.text.primary,
                 fontWeight: 600,
               }}
@@ -244,10 +238,7 @@ export const BookMediaMUI: React.FC<{ book: BookItems }> = ({ book }) => {
               label={new Date(datum).toLocaleDateString()}
               size="small"
               sx={{
-                bgcolor: alpha(
-                  theme.palette.info.main,
-                  isDark ? 0.2 : 0.12,
-                ),
+                bgcolor: alpha(theme.palette.info.main, isDark ? 0.2 : 0.12),
                 color: isDark
                   ? theme.palette.info.light
                   : theme.palette.info.dark,

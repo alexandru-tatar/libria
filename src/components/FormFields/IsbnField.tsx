@@ -18,7 +18,8 @@ export const IsbnField = <T extends FieldValues>({
       placeholder="978-0-007-00644-1"
       rules={{
         required: 'ISBN ist erforderlich',
-        validate: (value) => isValidIsbn13(String(value)) || 'Ungültige ISBN-13',
+        validate: (value) =>
+          isValidIsbn13(String(value)) || 'Ungültige ISBN-13',
       }}
     />
   );

@@ -20,7 +20,9 @@ export const AdminPage = () => {
         Admin Panel
       </Typography>
 
-      <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, mb: { xs: 2, md: 3 } }}>
+      <Paper
+        sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, mb: { xs: 2, md: 3 } }}
+      >
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           alignItems={{ xs: 'stretch', sm: 'center' }}

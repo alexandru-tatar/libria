@@ -10,34 +10,38 @@ import { defaultFilters, useBookSearch } from '../../hooks/useBookSearch';
 
 const pageSize = 50;
 
-const cardSx = (delaySeconds: number) => ({
-  display: 'flex',
-  alignItems: 'center',
-  p: 1.2,
-  boxShadow: 3,
-  borderRadius: 3,
-  minHeight: 80,
-  transition: 'transform 0.18s, box-shadow 0.18s',
-  background: 'rgba(255,255,255,0.98)',
-  cursor: 'default',
-  '&:hover': {
-    transform: 'translateY(-3px) scale(1.018)',
-    boxShadow: 6,
-  },
-  animation: `fadeInUp 0.7s ease ${delaySeconds}s both`,
-  '@keyframes fadeInUp': {
-    from: { opacity: 0, transform: 'translateY(20px)' },
-    to: { opacity: 1, transform: 'none' },
-  },
-} as const);
+const cardSx = (delaySeconds: number) =>
+  ({
+    display: 'flex',
+    alignItems: 'center',
+    p: 1.2,
+    boxShadow: 3,
+    borderRadius: 3,
+    minHeight: 80,
+    transition: 'transform 0.18s, box-shadow 0.18s',
+    background: 'rgba(255,255,255,0.98)',
+    cursor: 'default',
+    '&:hover': {
+      transform: 'translateY(-3px) scale(1.018)',
+      boxShadow: 6,
+    },
+    animation: `fadeInUp 0.7s ease ${delaySeconds}s both`,
+    '@keyframes fadeInUp': {
+      from: { opacity: 0, transform: 'translateY(20px)' },
+      to: { opacity: 1, transform: 'none' },
+    },
+  }) as const;
 
 export function BookStatistics() {
   const theme = useTheme();
 
-  const { visible: books, hasMore, loadMore, loading, error } = useBookSearch(
-    defaultFilters,
-    pageSize,
-  );
+  const {
+    visible: books,
+    hasMore,
+    loadMore,
+    loading,
+    error,
+  } = useBookSearch(defaultFilters, pageSize);
 
   useEffect(() => {
     if (hasMore && !loading) loadMore();
@@ -66,7 +70,8 @@ export function BookStatistics() {
       if (typeof b.rabatt === 'number' && b.rabatt > 0) mitRabatt += 1;
     }
 
-    const durchschnittspreis = count > 0 ? (preisSumme / count).toFixed(2) : '–';
+    const durchschnittspreis =
+      count > 0 ? (preisSumme / count).toFixed(2) : '–';
     const durchschnittsbewertung =
       count > 0 ? (ratingSumme / count).toFixed(2) : '–';
 
@@ -82,7 +87,8 @@ export function BookStatistics() {
 
   const anzahlText = loading ? '…' : String(computed.count);
 
-  if (loading && books.length === 0) return <div>Statistiken werden geladen…</div>;
+  if (loading && books.length === 0)
+    return <div>Statistiken werden geladen…</div>;
   if (error) return <div>{`Fehler: ${error}`}</div>;
 
   const stats = [
@@ -105,7 +111,9 @@ export function BookStatistics() {
       value: (
         <>
           {computed.durchschnittsbewertung}{' '}
-          <StarIcon sx={{ fontSize: 20, mb: '-3px', color: theme.palette.warning.dark }} />
+          <StarIcon
+            sx={{ fontSize: 20, mb: '-3px', color: theme.palette.warning.dark }}
+          />
         </>
       ),
       icon: <StarIcon fontSize="medium" />,
@@ -156,7 +164,11 @@ export function BookStatistics() {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)',
+          },
           gap: 2,
           mb: 2,
         }}
@@ -179,7 +191,14 @@ export function BookStatistics() {
               <Typography color="text.secondary" fontWeight={500} fontSize={13}>
                 {label}
               </Typography>
-              <Typography sx={{ fontSize: 24, fontWeight: 700, color: valueColor, lineHeight: 1.1 }}>
+              <Typography
+                sx={{
+                  fontSize: 24,
+                  fontWeight: 700,
+                  color: valueColor,
+                  lineHeight: 1.1,
+                }}
+              >
                 {value}
               </Typography>
             </Box>

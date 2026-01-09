@@ -22,6 +22,7 @@ Unter "Authentication" → "Flows" → "Reset Credentials" prüfen, ob "Send Res
 ## Benutzer prüfen
 
 Im Bereich "Users" den Benutzer auswählen:
+
 - E-Mail muss eingetragen sein
 - "Email verified" auf On stellen
 - Benutzer muss aktiviert sein
@@ -29,4 +30,3 @@ Im Bereich "Users" den Benutzer auswählen:
 ## Passwort-Reset testen
 
 Im Login auf "Passwort vergessen?" klicken, E-Mail eingeben, Mail im FakeSMTP-Web anschauen und den Link nutzen.
-
