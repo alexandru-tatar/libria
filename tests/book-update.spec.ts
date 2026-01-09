@@ -29,23 +29,22 @@ test.describe('BookUpdate', () => {
 
         await page.getByLabel('Bewertung').fill('3');
         await page.getByLabel('Preis').fill('33.5');
-        await page.getByLabel('Rabatt (optional)').fill('0.2');
-        await page.getByLabel('Lieferbar (optional)').uncheck();
+        await page.getByLabel('Rabatt').fill('0.2');
+        await page.getByLabel('Lieferbar').uncheck();
         await page
-            .getByLabel('Erscheinungsdatum (optional)')
+            .getByLabel('Erscheinungsdatum')
             .fill('2024-03-10');
-        await page
-            .getByLabel('Homepage (optional)')
-            .fill('https://example.com/updated');
+        await page.getByLabel('Homepage').fill('https://example.com/updated');
 
-        await page.getByLabel('Art (optional)').click();
+        await page.getByLabel('Art').click();
         await page.getByRole('option', { name: 'EPUB' }).click();
 
-        await page.getByLabel(/^Titel$/).fill('Admin Seed Book Updated');
-        await page.getByLabel('Untertitel (optional)').fill('V2');
+        await page.getByLabel(/^Titel/).fill('Admin Seed Book Updated');
+        await page.getByLabel('Untertitel').fill('V2');
 
-        await page.getByLabel('Abbildung Beschriftung').fill('New Cover');
-        await page.getByLabel('Abbildung Content-Type').fill('image/jpeg');
+        await page.getByLabel('Beschriftung').fill('New Cover');
+        await page.getByLabel('Content-Type').click();
+        await page.getByRole('option', { name: 'image/png' }).click();
 
         const updateRequest = page.waitForRequest(
             (request) =>
@@ -71,7 +70,7 @@ test.describe('BookUpdate', () => {
                 update: { titel: 'Admin Seed Book Updated', untertitel: 'V2' },
             },
             abbildungen: [
-                { beschriftung: 'New Cover', contentType: 'image/jpeg' },
+                { beschriftung: 'New Cover', contentType: 'image/png' },
             ],
         });
         expect(payload.datum).toBe('2024-03-10T00:00:00.000Z');

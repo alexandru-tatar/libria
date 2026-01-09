@@ -21,22 +21,23 @@ test.describe('BookCreate', () => {
         await page.getByLabel('ISBN-13').fill('9780306406157');
         await page.getByLabel('Bewertung').fill('4');
         await page.getByLabel('Preis').fill('12.99');
-        await page.getByLabel(/^Titel$/).fill('Playwright Buch');
-        await page.getByLabel('Untertitel (optional)').fill('UI Tests');
+        await page.getByLabel(/^Titel/).fill('Playwright Buch');
+        await page.getByLabel('Untertitel').fill('UI Tests');
 
-        await page.getByLabel('Art (optional)').click();
+        await page.getByLabel('Art').click();
         await page.getByRole('option', { name: 'Paperback' }).click();
 
-        await page.getByLabel('Rabatt (optional)').fill('0.15');
-        await page.getByLabel('Lieferbar (optional)').check();
+        await page.getByLabel('Rabatt').fill('0.15');
+        await page.getByLabel('Lieferbar').check();
         await page
-            .getByLabel('Erscheinungsdatum (optional)')
+            .getByLabel('Erscheinungsdatum')
             .fill('2024-02-14');
-        await page
-            .getByLabel('Homepage (optional)')
-            .fill('https://example.com/new');
-        await page.getByLabel('Abbildung Beschriftung').fill('Cover');
-        await page.getByLabel('Abbildung Content-Type').fill('image/png');
+        await page.getByLabel('Homepage').fill('https://example.com/new');
+
+        await page.getByRole('button', { name: 'Abbildung hinzufügen' }).click();
+        await page.getByLabel('Beschriftung').fill('Cover');
+        await page.getByLabel('Content-Type').click();
+        await page.getByRole('option', { name: 'image/png' }).click();
 
         const createRequest = page.waitForRequest(
             (request) =>
